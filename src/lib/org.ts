@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { Member } from "./types";
 
 /**
  * Returns { user, orgId } for the current request.
@@ -21,7 +22,7 @@ export async function requireOrg() {
     .order("created_at", { ascending: true })
     .limit(1);
 
-  const membership = members?.[0];
+  const membership: any = members?.[0];
   if (!membership) redirect("/onboarding");
 
   return { user, orgId: membership.org_id, role: membership.role };

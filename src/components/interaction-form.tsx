@@ -123,9 +123,9 @@ export function InteractionForm({
     } else {
       const { data, error } = await supabase
         .from("interactions")
-        .insert({ ...payload, org_id: orgId })
+        .insert({ ...payload, org_id: orgId } as any)
         .select("id")
-        .single();
+        .single<{ id: string }>();
       if (error || !data) {
         setError(error?.message || "Could not save");
         setLoading(false);
@@ -147,7 +147,7 @@ export function InteractionForm({
       }));
 
     if (itemsToInsert.length > 0) {
-      const { error: itemErr } = await supabase.from("interaction_items").insert(itemsToInsert);
+      const { error: itemErr } = await supabase.from("interaction_items").insert(itemsToInsert as any);
       if (itemErr) {
         setError(itemErr.message);
         setLoading(false);

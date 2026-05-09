@@ -59,9 +59,9 @@ export function ContactForm({
     } else {
       const { data, error } = await supabase
         .from("contacts")
-        .insert({ ...payload, org_id: orgId })
+        .insert({ ...payload, org_id: orgId } as any)
         .select("id")
-        .single();
+        .single<{ id: string }>();
       if (error || !data) {
         setError(error?.message || "Could not save");
         setLoading(false);

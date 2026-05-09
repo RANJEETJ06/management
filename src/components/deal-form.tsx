@@ -132,7 +132,7 @@ export function DealForm({
 
     let dealId: string;
     if (editing) {
-      const { error } = await supabase.from("deals").update(payload).eq("id", initial!.id);
+      const { error } = await supabase.from("deals").update(payload as any).eq("id", initial!.id);
       if (error) {
         setError(error.message);
         setLoading(false);
@@ -143,9 +143,9 @@ export function DealForm({
     } else {
       const { data, error } = await supabase
         .from("deals")
-        .insert({ ...payload, org_id: orgId })
+        .insert({ ...payload, org_id: orgId } as any)
         .select("id")
-        .single();
+        .single<{ id: string }>();
       if (error || !data) {
         setError(error?.message || "Could not save");
         setLoading(false);
@@ -163,7 +163,7 @@ export function DealForm({
         unit: l.unit.trim() || "kg",
         price_per_unit: Number(l.price_per_unit),
         notes: l.notes.trim() || null,
-      }))
+      })) as any
     );
 
     if (itemErr) {
