@@ -24,6 +24,15 @@ export default async function OnboardingPage({
     redirect("/dashboard");
   }
 
+  // If a teammate invited them while they had no workspace, send them through
+  // the explicit accept/decline flow before offering to create their own.
+  const { data: pending } = await supabase
+    .rpc("my_pending_invitations")
+    .returns<unknown[]>();
+  if (pending && pending.length > 0) {
+    redirect("/invitations");
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-emerald-100 px-4 py-10">
       <Card className="w-full max-w-md shadow-lg">

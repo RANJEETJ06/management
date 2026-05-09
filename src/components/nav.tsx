@@ -17,8 +17,10 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 
 type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }> };
+type Membership = { org_id: string; role: string; org_name: string };
 
 const items: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -29,7 +31,17 @@ const items: NavItem[] = [
   { href: "/team", label: "Team", icon: UserCog },
 ];
 
-export function Nav({ orgName, userEmail }: { orgName: string; userEmail: string }) {
+export function Nav({
+  memberships,
+  activeOrgId,
+  pendingCount,
+  userEmail,
+}: {
+  memberships: Membership[];
+  activeOrgId: string;
+  pendingCount: number;
+  userEmail: string;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
@@ -81,11 +93,14 @@ export function Nav({ orgName, userEmail }: { orgName: string; userEmail: string
     </div>
   );
 
+  const activeName =
+    memberships.find((m) => m.org_id === activeOrgId)?.org_name ?? "Workspace";
+
   return (
     <>
       {/* Mobile top bar */}
       <header className="md:hidden sticky top-0 z-30 flex items-center justify-between border-b bg-background px-4 py-3">
-        <div className="font-semibold truncate">{orgName}</div>
+        <div className="font-semibold truncate">{activeName}</div>
         <button
           onClick={() => setMobileOpen((s) => !s)}
           className="rounded-md p-2 hover:bg-accent"
@@ -102,7 +117,13 @@ export function Nav({ orgName, userEmail }: { orgName: string; userEmail: string
             onClick={(e) => e.stopPropagation()}
             className="absolute left-0 top-0 h-full w-72 bg-background p-4 flex flex-col"
           >
-            <div className="px-3 pb-4 font-semibold">{orgName}</div>
+            <div className="pb-3">
+              <WorkspaceSwitcher
+                memberships={memberships}
+                activeOrgId={activeOrgId}
+                pendingCount={pendingCount}
+              />
+            </div>
             <NavLinks />
             <Footer />
           </aside>
@@ -111,9 +132,12 @@ export function Nav({ orgName, userEmail }: { orgName: string; userEmail: string
 
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 md:border-r md:bg-background md:p-4">
-        <div className="px-3 pb-4">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground">Workspace</div>
-          <div className="font-semibold truncate">{orgName}</div>
+        <div className="pb-3">
+          <WorkspaceSwitcher
+            memberships={memberships}
+            activeOrgId={activeOrgId}
+            pendingCount={pendingCount}
+          />
         </div>
         <NavLinks />
         <Footer />
