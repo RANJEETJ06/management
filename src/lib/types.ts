@@ -172,6 +172,7 @@ export interface Database {
     Functions: {
       current_org_id: { Args: Record<string, never>; Returns: string | null };
       is_member_of: { Args: { target_org: string }; Returns: boolean };
+      create_workspace: { Args: { workspace_name: string }; Returns: string };
     };
   };
 }

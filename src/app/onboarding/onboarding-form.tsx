@@ -27,40 +27,21 @@ export function OnboardingForm({
     setError("");
     setLoading(true);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      setError("Session expired. Please log in again.");
-      setLoading(false);
-      return;
-    }
+    const workspaceName = name.trim() || `${userEmail.split("@")[0]}'s workspace`;
 
-    const { data: org, error: orgErr } = await supabase
-      .from("organizations")
-      .insert({ name: name.trim() || `${userEmail.split("@")[0]}'s workspace`, owner_id: user.id })
-      .select("id")
-      .single();
+    const { data: orgId, error: rpcErr } = await supabase.rpc("create_workspace", {
+      workspace_name: workspaceName,
+    });
 
-    if (orgErr || !org) {
-      setError(orgErr?.message || "Could not create workspace.");
-      setLoading(false);
-      return;
-    }
-
-    const { error: memErr } = await supabase
-      .from("members")
-      .insert({ org_id: org.id, user_id: user.id, role: "owner" });
-
-    if (memErr) {
-      setError(memErr.message);
+    if (rpcErr || !orgId) {
+      setError(rpcErr?.message || "Could not create workspace.");
       setLoading(false);
       return;
     }
 
     // Seed default categories so the user has something to tag against.
     await supabase.from("categories").insert(
-      SEED_CATEGORIES.map((cat) => ({ org_id: org.id, name: cat }))
+      SEED_CATEGORIES.map((cat) => ({ org_id: orgId, name: cat }))
     );
 
     router.push("/dashboard");
