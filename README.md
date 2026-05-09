@@ -41,7 +41,7 @@ npm install
 In the Supabase dashboard:
 
 1. Open **SQL editor → New query**.
-2. Paste the entire contents of `supabase/migrations/0001_init.sql` from this
+2. Paste the entire contents of `supabase/migrations/0001_init.sql` and `supabase/migrations/0002_create_workspace_rpc.sql` from this
    repo.
 3. Click **Run**. You should see "Success. No rows returned." This creates all
    tables, RLS policies, and the signup trigger.
