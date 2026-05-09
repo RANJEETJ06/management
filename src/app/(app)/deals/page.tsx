@@ -31,7 +31,8 @@ export default async function DealsPage({
 }: {
   searchParams: { status?: string; direction?: string };
 }) {
-  const { orgId } = await requireOrg();
+  const { orgId, role } = await requireOrg();
+  const canEdit = role !== "member";
   const supabase = createClient();
 
   let query = supabase
@@ -61,11 +62,13 @@ export default async function DealsPage({
         title="Deals"
         description="Track firm purchases and sales."
         action={
-          <Button asChild>
-            <Link href="/deals/new">
-              <Plus className="h-4 w-4" /> New deal
-            </Link>
-          </Button>
+          canEdit ? (
+            <Button asChild>
+              <Link href="/deals/new">
+                <Plus className="h-4 w-4" /> New deal
+              </Link>
+            </Button>
+          ) : null
         }
       />
 
@@ -97,11 +100,17 @@ export default async function DealsPage({
       {(rows?.length ?? 0) === 0 ? (
         <EmptyState
           title="No deals yet"
-          description="Capture your first firm order — useful once a conversation turns into a transaction."
+          description={
+            canEdit
+              ? "Capture your first firm order — useful once a conversation turns into a transaction."
+              : "An admin hasn't recorded any deals yet."
+          }
           action={
-            <Button asChild>
-              <Link href="/deals/new">New deal</Link>
-            </Button>
+            canEdit ? (
+              <Button asChild>
+                <Link href="/deals/new">New deal</Link>
+              </Button>
+            ) : undefined
           }
         />
       ) : (

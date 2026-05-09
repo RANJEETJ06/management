@@ -1,11 +1,12 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { requireOrg } from "@/lib/org";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { InteractionForm } from "@/components/interaction-form";
 
 export default async function EditInteractionPage({ params }: { params: { id: string } }) {
-  const { orgId } = await requireOrg();
+  const { orgId, role } = await requireOrg();
+  if (role === "member") redirect(`/interactions/${params.id}`);
   const supabase = createClient();
 
   const [{ data: row }, { data: items }, { data: contacts }, { data: categories }] = await Promise.all([

@@ -6,7 +6,8 @@ import { CategoriesManager } from "./categories-manager";
 export const dynamic = "force-dynamic";
 
 export default async function CategoriesPage() {
-  const { orgId } = await requireOrg();
+  const { orgId, role } = await requireOrg();
+  const canEdit = role !== "member";
   const supabase = createClient();
   const { data: categories } = await supabase
     .from("categories")
@@ -20,7 +21,7 @@ export default async function CategoriesPage() {
         title="Categories"
         description="Tags you can apply to interactions and deals (vegetables, fruits, etc.)."
       />
-      <CategoriesManager orgId={orgId} initial={categories ?? []} />
+      <CategoriesManager orgId={orgId} initial={categories ?? []} canEdit={canEdit} />
     </div>
   );
 }

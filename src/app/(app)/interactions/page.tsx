@@ -24,7 +24,8 @@ export default async function InteractionsPage({
 }: {
   searchParams: { q?: string; from?: string; to?: string; contact?: string; status?: string };
 }) {
-  const { orgId } = await requireOrg();
+  const { orgId, role } = await requireOrg();
+  const canEdit = role !== "member";
   const supabase = createClient();
 
   let query = supabase
@@ -56,11 +57,13 @@ export default async function InteractionsPage({
         title="Interactions"
         description="Diary of conversations and meetings."
         action={
-          <Button asChild>
-            <Link href="/interactions/new">
-              <Plus className="h-4 w-4" /> Log interaction
-            </Link>
-          </Button>
+          canEdit ? (
+            <Button asChild>
+              <Link href="/interactions/new">
+                <Plus className="h-4 w-4" /> Log interaction
+              </Link>
+            </Button>
+          ) : null
         }
       />
 
@@ -102,11 +105,17 @@ export default async function InteractionsPage({
       {(rows?.length ?? 0) === 0 ? (
         <EmptyState
           title="No interactions yet"
-          description="Log your first conversation to start building history."
+          description={
+            canEdit
+              ? "Log your first conversation to start building history."
+              : "An admin hasn't logged any interactions yet."
+          }
           action={
-            <Button asChild>
-              <Link href="/interactions/new">Log interaction</Link>
-            </Button>
+            canEdit ? (
+              <Button asChild>
+                <Link href="/interactions/new">Log interaction</Link>
+              </Button>
+            ) : undefined
           }
         />
       ) : (

@@ -14,9 +14,11 @@ type CategoryRow = Pick<Category, "id" | "name" | "parent_id">;
 export function CategoriesManager({
   orgId,
   initial,
+  canEdit,
 }: {
   orgId: string;
   initial: CategoryRow[];
+  canEdit: boolean;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -58,21 +60,23 @@ export function CategoriesManager({
 
   return (
     <div className="space-y-6 max-w-xl">
-      <Card>
-        <CardContent className="p-4">
-          <form onSubmit={add} className="flex gap-2">
-            <Input
-              placeholder="New category (e.g. Leafy greens)"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <Button type="submit" disabled={busy}>
-              Add
-            </Button>
-          </form>
-          {error && <p className="text-sm text-destructive mt-2">{error}</p>}
-        </CardContent>
-      </Card>
+      {canEdit && (
+        <Card>
+          <CardContent className="p-4">
+            <form onSubmit={add} className="flex gap-2">
+              <Input
+                placeholder="New category (e.g. Leafy greens)"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <Button type="submit" disabled={busy}>
+                Add
+              </Button>
+            </form>
+            {error && <p className="text-sm text-destructive mt-2">{error}</p>}
+          </CardContent>
+        </Card>
+      )}
 
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">No categories yet.</p>
@@ -81,9 +85,11 @@ export function CategoriesManager({
           {rows.map((row) => (
             <div key={row.id} className="flex items-center justify-between px-4 py-2">
               <span className="text-sm">{row.name}</span>
-              <Button variant="ghost" size="icon" onClick={() => remove(row.id)} aria-label="Delete">
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              {canEdit && (
+                <Button variant="ghost" size="icon" onClick={() => remove(row.id)} aria-label="Delete">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           ))}
         </div>

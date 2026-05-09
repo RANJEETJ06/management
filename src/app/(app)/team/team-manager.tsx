@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trash2 } from "lucide-react";
+import { Trash2, Copy, Check } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 type Member = { user_id: string; role: string; created_at: string };
@@ -18,6 +18,14 @@ type Invitation = {
   role: string;
   accepted_at: string | null;
   created_at: string;
+};
+
+type LastInvite = {
+  email: string;
+  message: string;
+  inviteLink: string;
+  emailed: boolean;
+  alreadyExisted: boolean;
 };
 
 export function TeamManager({
@@ -37,33 +45,53 @@ export function TeamManager({
   const [role, setRole] = useState<"member" | "admin">("member");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [info, setInfo] = useState("");
+  const [last, setLast] = useState<LastInvite | null>(null);
+  const [copied, setCopied] = useState(false);
 
   async function invite(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setInfo("");
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-
+    setLast(null);
+    setCopied(false);
     setBusy(true);
-    const { error } = await supabase
-      .from("invitations")
-      .insert({ org_id: orgId, email: email.trim().toLowerCase(), role, invited_by: user.id } as any); //any added for production
-    setBusy(false);
 
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      const res = await fetch("/api/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orgId, email: email.trim(), role }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.ok) {
+        setError(data?.error ?? "Could not send invitation.");
+        return;
+      }
+      setLast({
+        email: email.trim(),
+        message: data.message ?? "Invitation saved.",
+        inviteLink: data.inviteLink,
+        emailed: !!data.emailed,
+        alreadyExisted: !!data.alreadyExisted,
+      });
+      setEmail("");
+      router.refresh();
+    } catch (err: any) {
+      setError(err?.message ?? "Network error.");
+    } finally {
+      setBusy(false);
     }
-    setInfo(
-      `Invited ${email}. Ask them to sign up at this site with that email — they'll join automatically.`
-    );
-    setEmail("");
-    router.refresh();
+  }
+
+  async function copyLink() {
+    if (!last?.inviteLink) return;
+    try {
+      await navigator.clipboard.writeText(last.inviteLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API can be blocked in older mobile browsers — fall back to
+      // selecting the link text so the user can long-press → copy.
+    }
   }
 
   async function revoke(id: string) {
@@ -80,7 +108,7 @@ export function TeamManager({
     <div className="space-y-6 max-w-2xl">
       {canManage && (
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-4 space-y-3">
             <form onSubmit={invite} className="flex flex-col sm:flex-row gap-2">
               <Input
                 type="email"
@@ -101,8 +129,50 @@ export function TeamManager({
                 {busy ? "Sending…" : "Invite"}
               </Button>
             </form>
-            {error && <p className="text-sm text-destructive mt-2">{error}</p>}
-            {info && <p className="text-sm text-emerald-700 mt-2">{info}</p>}
+
+            <p className="text-xs text-muted-foreground">
+              <strong>Members</strong> can view all data but can&apos;t add or
+              edit. <strong>Admins</strong> can edit data and invite more people.
+            </p>
+
+            {error && <p className="text-sm text-destructive">{error}</p>}
+
+            {last && (
+              <div className="rounded-md border bg-emerald-50 border-emerald-200 p-3 space-y-2">
+                <p className="text-sm text-emerald-900">{last.message}</p>
+                <div className="flex items-stretch gap-2">
+                  <Input
+                    readOnly
+                    value={last.inviteLink}
+                    onFocus={(e) => e.currentTarget.select()}
+                    className="font-mono text-xs"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={copyLink}
+                    aria-label="Copy invite link"
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="h-4 w-4" /> Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-4 w-4" /> Copy link
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-emerald-900/80">
+                  {last.emailed
+                    ? "Tip: if the email doesn't arrive (spam folder, typo), share this link directly over WhatsApp or SMS."
+                    : last.alreadyExisted
+                    ? "They already have an account — share this link so they can log in and see the workspace."
+                    : "Email delivery isn't configured yet — share this link directly with them."}
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

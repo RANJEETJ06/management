@@ -20,7 +20,8 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export default async function ContactDetailPage({ params }: { params: { id: string } }) {
-  const { orgId } = await requireOrg();
+  const { orgId, role } = await requireOrg();
+  const canEdit = role !== "member";
   const supabase = createClient();
 
   const { data: contact } = await supabase
@@ -55,18 +56,20 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
         title={contact.name}
         description={`${TYPE_LABELS[contact.type]}${contact.locality ? " · " + contact.locality : ""}`}
         action={
-          <>
-            <Button asChild variant="outline">
-              <Link href={`/contacts/${contact.id}/edit`}>
-                <Pencil className="h-4 w-4" /> Edit
-              </Link>
-            </Button>
-            <Button asChild>
-              <Link href={`/interactions/new?contact=${contact.id}`}>
-                <Plus className="h-4 w-4" /> Log interaction
-              </Link>
-            </Button>
-          </>
+          canEdit ? (
+            <>
+              <Button asChild variant="outline">
+                <Link href={`/contacts/${contact.id}/edit`}>
+                  <Pencil className="h-4 w-4" /> Edit
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link href={`/interactions/new?contact=${contact.id}`}>
+                  <Plus className="h-4 w-4" /> Log interaction
+                </Link>
+              </Button>
+            </>
+          ) : null
         }
       />
 

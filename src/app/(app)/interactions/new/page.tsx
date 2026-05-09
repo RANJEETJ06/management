@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { requireOrg } from "@/lib/org";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
@@ -8,7 +9,8 @@ export default async function NewInteractionPage({
 }: {
   searchParams: { contact?: string };
 }) {
-  const { orgId } = await requireOrg();
+  const { orgId, role } = await requireOrg();
+  if (role === "member") redirect("/interactions");
   const supabase = createClient();
 
   const [{ data: contacts }, { data: categories }] = await Promise.all([

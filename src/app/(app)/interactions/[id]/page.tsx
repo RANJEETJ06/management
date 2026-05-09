@@ -12,7 +12,8 @@ import { Pencil } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function InteractionDetailPage({ params }: { params: { id: string } }) {
-  const { orgId } = await requireOrg();
+  const { orgId, role } = await requireOrg();
+  const canEdit = role !== "member";
   const supabase = createClient();
 
   const { data: row } = await supabase
@@ -36,11 +37,13 @@ export default async function InteractionDetailPage({ params }: { params: { id: 
         title={`Interaction · ${formatDate(r.occurred_on)}`}
         description={relativeDate(r.occurred_on)}
         action={
-          <Button asChild variant="outline">
-            <Link href={`/interactions/${r.id}/edit`}>
-              <Pencil className="h-4 w-4" /> Edit
-            </Link>
-          </Button>
+          canEdit ? (
+            <Button asChild variant="outline">
+              <Link href={`/interactions/${r.id}/edit`}>
+                <Pencil className="h-4 w-4" /> Edit
+              </Link>
+            </Button>
+          ) : null
         }
       />
 

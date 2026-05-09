@@ -23,7 +23,8 @@ export default async function ContactsPage({
 }: {
   searchParams: { q?: string; type?: string; locality?: string };
 }) {
-  const { orgId } = await requireOrg();
+  const { orgId, role } = await requireOrg();
+  const canEdit = role !== "member";
   const supabase = createClient();
 
   let query = supabase
@@ -57,11 +58,13 @@ export default async function ContactsPage({
         title="Contacts"
         description="Suppliers, buyers, and partners."
         action={
-          <Button asChild>
-            <Link href="/contacts/new">
-              <Plus className="h-4 w-4" /> Add contact
-            </Link>
-          </Button>
+          canEdit ? (
+            <Button asChild>
+              <Link href="/contacts/new">
+                <Plus className="h-4 w-4" /> Add contact
+              </Link>
+            </Button>
+          ) : null
         }
       />
 
@@ -97,11 +100,17 @@ export default async function ContactsPage({
       {(contacts?.length ?? 0) === 0 ? (
         <EmptyState
           title="No contacts yet"
-          description="Add the first supplier or buyer to get started."
+          description={
+            canEdit
+              ? "Add the first supplier or buyer to get started."
+              : "An admin hasn't added any contacts yet."
+          }
           action={
-            <Button asChild>
-              <Link href="/contacts/new">Add contact</Link>
-            </Button>
+            canEdit ? (
+              <Button asChild>
+                <Link href="/contacts/new">Add contact</Link>
+              </Button>
+            ) : undefined
           }
         />
       ) : (

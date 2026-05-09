@@ -1,11 +1,12 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { requireOrg } from "@/lib/org";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { DealForm } from "@/components/deal-form";
 
 export default async function EditDealPage({ params }: { params: { id: string } }) {
-  const { orgId } = await requireOrg();
+  const { orgId, role } = await requireOrg();
+  if (role === "member") redirect(`/deals/${params.id}`);
   const supabase = createClient();
 
   const [{ data: deal }, { data: items }, { data: contacts }, { data: categories }] = await Promise.all([

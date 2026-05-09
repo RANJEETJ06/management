@@ -32,7 +32,7 @@ export default async function TeamPage() {
     <div>
       <PageHeader
         title="Team"
-        description="Invite teammates by email. They'll be added automatically when they sign up."
+        description="Invite teammates by email or share the invite link directly. They'll join your workspace as soon as they log in."
       />
       <TeamManager
         orgId={orgId}

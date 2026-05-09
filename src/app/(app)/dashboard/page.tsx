@@ -11,7 +11,8 @@ import { Plus, ArrowRight } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const { orgId } = await requireOrg();
+  const { orgId, role } = await requireOrg();
+  const canEdit = role !== "member";
   const supabase = createClient();
 
   const today = new Date().toISOString().slice(0, 10);
@@ -48,11 +49,13 @@ export default async function DashboardPage() {
         title="Dashboard"
         description="Your business at a glance."
         action={
-          <Button asChild>
-            <Link href="/interactions/new">
-              <Plus className="h-4 w-4" /> Log interaction
-            </Link>
-          </Button>
+          canEdit ? (
+            <Button asChild>
+              <Link href="/interactions/new">
+                <Plus className="h-4 w-4" /> Log interaction
+              </Link>
+            </Button>
+          ) : null
         }
       />
 

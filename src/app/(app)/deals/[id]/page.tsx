@@ -12,7 +12,8 @@ import { Pencil } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function DealDetailPage({ params }: { params: { id: string } }) {
-  const { orgId } = await requireOrg();
+  const { orgId, role } = await requireOrg();
+  const canEdit = role !== "member";
   const supabase = createClient();
 
   const { data: row } = await supabase
@@ -35,11 +36,13 @@ export default async function DealDetailPage({ params }: { params: { id: string 
         title={`${r.direction === "buy" ? "Purchase" : "Sale"} · ${formatDate(r.deal_date)}`}
         description={r.contacts?.name}
         action={
-          <Button asChild variant="outline">
-            <Link href={`/deals/${r.id}/edit`}>
-              <Pencil className="h-4 w-4" /> Edit
-            </Link>
-          </Button>
+          canEdit ? (
+            <Button asChild variant="outline">
+              <Link href={`/deals/${r.id}/edit`}>
+                <Pencil className="h-4 w-4" /> Edit
+              </Link>
+            </Button>
+          ) : null
         }
       />
 
