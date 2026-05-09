@@ -29,7 +29,6 @@ export function formatCurrency(amount: number | null | undefined, currency = "IN
 
 export function siteUrl() {
   return (
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000")
+    process.env.NEXT_PUBLIC_SITE_URL
   );
 }
