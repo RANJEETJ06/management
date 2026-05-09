@@ -32,7 +32,7 @@ export function CategoriesManager({
     setBusy(true);
     const { data, error } = await supabase
       .from("categories")
-      .insert({ org_id: orgId, name: name.trim() })
+      .insert({ org_id: orgId, name: name.trim() } as any)//any added for production
       .select("id, name, parent_id")
       .single();
     setBusy(false);

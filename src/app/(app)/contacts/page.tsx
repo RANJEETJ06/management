@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Phone, MapPin } from "lucide-react";
-import type { ContactType } from "@/lib/types";
+import type { Contact, ContactType } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +33,10 @@ export default async function ContactsPage({
     .order("name", { ascending: true })
     .limit(200);
 
-  if (searchParams.type && ["supplier", "buyer", "partner", "other"].includes(searchParams.type)) {
+  if (
+    searchParams.type &&
+    ["supplier", "buyer", "partner", "other"].includes(searchParams.type)
+  ) {
     query = query.eq("type", searchParams.type);
   }
   if (searchParams.locality) {
@@ -103,7 +106,8 @@ export default async function ContactsPage({
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {contacts!.map((c) => (
+          {/* contact interface */}
+          {contacts!.map((c: Contact) => (
             <Link key={c.id} href={`/contacts/${c.id}`}>
               <Card className="transition-shadow hover:shadow-md h-full">
                 <CardContent className="p-4 space-y-2">

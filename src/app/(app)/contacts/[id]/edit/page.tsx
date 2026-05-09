@@ -3,6 +3,7 @@ import { requireOrg } from "@/lib/org";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { ContactForm } from "@/components/contact-form";
+import { Contact } from "@/lib/types";
 
 export default async function EditContactPage({ params }: { params: { id: string } }) {
   const { orgId } = await requireOrg();
@@ -13,7 +14,7 @@ export default async function EditContactPage({ params }: { params: { id: string
     .select("*")
     .eq("id", params.id)
     .eq("org_id", orgId)
-    .maybeSingle();
+    .maybeSingle<Contact>();
 
   if (!contact) notFound();
 

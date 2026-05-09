@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate, relativeDate } from "@/lib/utils";
 import { Phone, Mail, MapPin, Pencil, Plus } from "lucide-react";
+import { Contact, Deal, Interaction } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,7 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
     .select("*")
     .eq("id", params.id)
     .eq("org_id", orgId)
-    .maybeSingle();
+    .maybeSingle<Contact>();
 
   if (!contact) notFound();
 
@@ -37,13 +38,15 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
       .select("id, occurred_on, summary, location, status")
       .eq("contact_id", params.id)
       .order("occurred_on", { ascending: false })
-      .limit(20),
+      .limit(20)
+      .returns<Interaction[]>(),
     supabase
       .from("deals")
       .select("id, deal_date, direction, status, amount_total, currency")
       .eq("contact_id", params.id)
       .order("deal_date", { ascending: false })
-      .limit(20),
+      .limit(20)
+      .returns<Deal[]>(),
   ]);
 
   return (

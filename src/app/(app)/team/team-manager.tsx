@@ -52,7 +52,7 @@ export function TeamManager({
     setBusy(true);
     const { error } = await supabase
       .from("invitations")
-      .insert({ org_id: orgId, email: email.trim().toLowerCase(), role, invited_by: user.id });
+      .insert({ org_id: orgId, email: email.trim().toLowerCase(), role, invited_by: user.id } as any); //any added for production
     setBusy(false);
 
     if (error) {
