@@ -27,11 +27,15 @@ export function OnboardingForm({
     setError("");
     setLoading(true);
 
-    const workspaceName = name.trim() || `${userEmail.split("@")[0]}'s workspace`;
+    const workspaceName =
+      name.trim() || `${userEmail.split("@")[0]}'s workspace`;
 
-    const { data: orgId, error: rpcErr } = await supabase.rpc("create_workspace", {
-      workspace_name: workspaceName,
-    });
+    const { data: orgId, error: rpcErr } = await supabase.rpc(
+      "create_workspace",
+      {
+        workspace_name: workspaceName,
+      } as any //as any added for production
+    );
 
     if (rpcErr || !orgId) {
       setError(rpcErr?.message || "Could not create workspace.");
@@ -41,7 +45,7 @@ export function OnboardingForm({
 
     // Seed default categories so the user has something to tag against.
     await supabase.from("categories").insert(
-      SEED_CATEGORIES.map((cat) => ({ org_id: orgId, name: cat }))
+      SEED_CATEGORIES.map((cat) => ({ org_id: orgId, name: cat })) as any //as any added for production
     );
 
     router.push("/dashboard");
