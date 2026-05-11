@@ -28,7 +28,11 @@ export function formatCurrency(amount: number | null | undefined, currency = "IN
 }
 
 export function siteUrl() {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL
-  );
+  // Why: on Netlify, OAuth's redirectTo lands on Supabase's Site URL fallback
+  // when this is undefined/malformed. Trust the browser's origin in client
+  // contexts so a missing env var doesn't break sign-in.
+  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+  if (fromEnv) return fromEnv;
+  if (typeof window !== "undefined") return window.location.origin;
+  return "";
 }
