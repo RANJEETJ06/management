@@ -19,7 +19,11 @@ import {
 import { cn } from "@/lib/utils";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 
-type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }> };
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+};
 type Membership = { org_id: string; role: string; org_name: string };
 
 const items: NavItem[] = [
@@ -49,6 +53,8 @@ export function Nav({
 
   async function signOut() {
     await supabase.auth.signOut();
+    localStorage.clear();
+    sessionStorage.clear();
     router.push("/login");
     router.refresh();
   }
@@ -56,7 +62,8 @@ export function Nav({
   const NavLinks = () => (
     <nav className="flex-1 space-y-1">
       {items.map((item) => {
-        const active = pathname === item.href || pathname.startsWith(item.href + "/");
+        const active =
+          pathname === item.href || pathname.startsWith(item.href + "/");
         const Icon = item.icon;
         return (
           <Link
@@ -106,13 +113,20 @@ export function Nav({
           className="rounded-md p-2 hover:bg-accent"
           aria-label="Toggle menu"
         >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {mobileOpen ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <Menu className="h-5 w-5" />
+          )}
         </button>
       </header>
 
       {/* Mobile drawer */}
       {mobileOpen && (
-        <div className="md:hidden fixed inset-0 z-40 bg-black/30" onClick={() => setMobileOpen(false)}>
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/30"
+          onClick={() => setMobileOpen(false)}
+        >
           <aside
             onClick={(e) => e.stopPropagation()}
             className="absolute left-0 top-0 h-full w-72 bg-background p-4 flex flex-col"
