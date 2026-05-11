@@ -68,7 +68,7 @@ export function LoginForm({
     setLoading("google");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo },
+      options: { redirectTo: `${siteUrl()}/auth/callback` },
     });
     if (error) {
       setError(error.message);
