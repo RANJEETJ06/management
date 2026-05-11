@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { siteUrl } from "@/lib/utils";
@@ -13,9 +13,31 @@ export function LoginForm({ next, initialError }: { next?: string; initialError?
   const supabase = createClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState<"password" | "magic" | "google" | null>(null);
+  const [loading, setLoading] = useState<"password" | "magic" | "google" | "recover" | null>(null);
   const [error, setError] = useState(initialError ?? "");
   const [info, setInfo] = useState("");
+
+  // Recovery: if Supabase's redirect lands on /login with a ?code=...
+  // (misconfigured Site URL / Redirect URLs), exchange it client-side
+  // instead of leaving the user stranded.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    if (!code) return;
+    setLoading("recover");
+    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+      if (error) {
+        setError(error.message);
+        setLoading(null);
+        return;
+      }
+      const dest = params.get("next") || next || "/dashboard";
+      window.history.replaceState({}, "", "/login");
+      router.replace(dest);
+      router.refresh();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const redirectTo = `${siteUrl()}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ""}`;
 
