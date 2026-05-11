@@ -56,12 +56,12 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && (path === "/login" || path === "/signup")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    url.search = "";
-    return NextResponse.redirect(url);
-  }
+  // if (user && (path === "/login" || path === "/signup")) {
+  //   const url = request.nextUrl.clone();
+  //   url.pathname = "/dashboard";
+  //   url.search = "";
+  //   return NextResponse.redirect(url);
+  // }
 
   return response;
 }
