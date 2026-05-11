@@ -39,10 +39,8 @@ export async function updateSession(request: NextRequest) {
   );
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  const user = session?.user;
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
   const isPublic = PUBLIC_PATHS.some(
@@ -56,12 +54,12 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // if (user && (path === "/login" || path === "/signup")) {
-  //   const url = request.nextUrl.clone();
-  //   url.pathname = "/dashboard";
-  //   url.search = "";
-  //   return NextResponse.redirect(url);
-  // }
+  if (user && (path === "/login" || path === "/signup")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
 
   return response;
 }

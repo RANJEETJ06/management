@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Phone, MapPin } from "lucide-react";
+import { Plus, Phone, MapPin, Download } from "lucide-react";
 import type { Contact, ContactType } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -58,13 +58,20 @@ export default async function ContactsPage({
         title="Contacts"
         description="Suppliers, buyers, and partners."
         action={
-          canEdit ? (
-            <Button asChild>
-              <Link href="/contacts/new">
-                <Plus className="h-4 w-4" /> Add contact
-              </Link>
+          <>
+            <Button asChild variant="outline">
+              <a href="/api/export/contacts">
+                <Download className="h-4 w-4" /> Export
+              </a>
             </Button>
-          ) : null
+            {canEdit && (
+              <Button asChild>
+                <Link href="/contacts/new">
+                  <Plus className="h-4 w-4" /> Add contact
+                </Link>
+              </Button>
+            )}
+          </>
         }
       />
 

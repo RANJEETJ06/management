@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { Plus } from "lucide-react";
+import { Plus, Download } from "lucide-react";
 import type { DealStatus, PaymentStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -62,13 +62,20 @@ export default async function DealsPage({
         title="Deals"
         description="Track firm purchases and sales."
         action={
-          canEdit ? (
-            <Button asChild>
-              <Link href="/deals/new">
-                <Plus className="h-4 w-4" /> New deal
-              </Link>
+          <>
+            <Button asChild variant="outline">
+              <a href="/api/export/deals">
+                <Download className="h-4 w-4" /> Export
+              </a>
             </Button>
-          ) : null
+            {canEdit && (
+              <Button asChild>
+                <Link href="/deals/new">
+                  <Plus className="h-4 w-4" /> New deal
+                </Link>
+              </Button>
+            )}
+          </>
         }
       />
 

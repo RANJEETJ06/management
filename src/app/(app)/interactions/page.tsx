@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDate, relativeDate } from "@/lib/utils";
-import { Plus } from "lucide-react";
+import { Plus, Download } from "lucide-react";
 import type { InteractionStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -57,13 +57,20 @@ export default async function InteractionsPage({
         title="Interactions"
         description="Diary of conversations and meetings."
         action={
-          canEdit ? (
-            <Button asChild>
-              <Link href="/interactions/new">
-                <Plus className="h-4 w-4" /> Log interaction
-              </Link>
+          <>
+            <Button asChild variant="outline">
+              <a href="/api/export/interactions">
+                <Download className="h-4 w-4" /> Export
+              </a>
             </Button>
-          ) : null
+            {canEdit && (
+              <Button asChild>
+                <Link href="/interactions/new">
+                  <Plus className="h-4 w-4" /> Log interaction
+                </Link>
+              </Button>
+            )}
+          </>
         }
       />
 
