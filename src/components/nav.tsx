@@ -53,8 +53,6 @@ export function Nav({
 
   async function signOut() {
     await supabase.auth.signOut();
-    localStorage.clear();
-    sessionStorage.clear();
     router.push("/login");
     router.refresh();
   }
