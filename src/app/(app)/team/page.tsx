@@ -6,7 +6,7 @@ import { TeamManager } from "./team-manager";
 export const dynamic = "force-dynamic";
 
 export default async function TeamPage() {
-  const { orgId, role } = await requireOrg();
+  const { user, orgId, role } = await requireOrg();
   const supabase = createClient();
 
   // Members + their auth.users info come via separate queries; the simplest
@@ -36,6 +36,7 @@ export default async function TeamPage() {
       />
       <TeamManager
         orgId={orgId}
+        currentUserId={user.id}
         canManage={canManage}
         members={members ?? []}
         invitations={invitations ?? []}

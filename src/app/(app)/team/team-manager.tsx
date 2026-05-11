@@ -30,11 +30,13 @@ type LastInvite = {
 
 export function TeamManager({
   orgId,
+  currentUserId,
   canManage,
   members,
   invitations,
 }: {
   orgId: string;
+  currentUserId: string;
   canManage: boolean;
   members: Member[];
   invitations: Invitation[];
@@ -97,6 +99,20 @@ export function TeamManager({
   async function revoke(id: string) {
     if (!confirm("Revoke this invitation?")) return;
     const { error } = await supabase.from("invitations").delete().eq("id", id);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    router.refresh();
+  }
+
+  async function removeMember(userId: string) {
+    if (!confirm("Remove this member from the workspace? They'll lose access immediately.")) return;
+    const { error } = await supabase
+      .from("members")
+      .delete()
+      .eq("org_id", orgId)
+      .eq("user_id", userId);
     if (error) {
       setError(error.message);
       return;
@@ -180,12 +196,33 @@ export function TeamManager({
       <section className="space-y-2">
         <h2 className="text-lg font-semibold">Members ({members.length})</h2>
         <div className="rounded-md border bg-card divide-y">
-          {members.map((m) => (
-            <div key={m.user_id} className="px-4 py-2 flex items-center justify-between text-sm">
-              <span className="font-mono text-xs text-muted-foreground truncate">{m.user_id}</span>
-              <Badge variant="secondary">{m.role}</Badge>
-            </div>
-          ))}
+          {members.map((m) => {
+            const isSelf = m.user_id === currentUserId;
+            const isOwner = m.role === "owner";
+            const canRemove = canManage && !isSelf && !isOwner;
+            return (
+              <div key={m.user_id} className="px-4 py-2 flex items-center justify-between text-sm gap-2">
+                <span className="font-mono text-xs text-muted-foreground truncate">
+                  {m.user_id}
+                  {isSelf && <span className="ml-2 not-italic text-foreground/60">(you)</span>}
+                </span>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">{m.role}</Badge>
+                  {canRemove && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeMember(m.user_id)}
+                      aria-label="Remove member"
+                      title="Remove member"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
