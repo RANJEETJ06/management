@@ -20,33 +20,10 @@ export function LoginForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState<
-    "password" | "magic" | "google" | "recover" | null
+    "password" | "magic" | "google" | null
   >(null);
   const [error, setError] = useState(initialError ?? "");
   const [info, setInfo] = useState("");
-
-  // Safety net: if Supabase's redirect ever lands the OAuth `?code=` here
-  // instead of /auth/callback (misconfigured Site URL, etc.), exchange it
-  // client-side rather than leaving the user stuck on /login.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-    if (!code) return;
-    setLoading("recover");
-    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-      if (error) {
-        setError(error.message);
-        setLoading(null);
-        window.history.replaceState({}, "", "/login");
-        return;
-      }
-      const dest = params.get("next") || next || "/dashboard";
-      window.history.replaceState({}, "", "/login");
-      router.replace(dest);
-      router.refresh();
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const redirectTo = `${siteUrl()}/auth/callback${
     next ? `?next=${encodeURIComponent(next)}` : ""
@@ -101,11 +78,6 @@ export function LoginForm({
 
   return (
     <div className="space-y-4">
-      {loading === "recover" && (
-        <p className="text-sm text-muted-foreground text-center">
-          Finishing sign-in…
-        </p>
-      )}
       <Button
         type="button"
         variant="outline"
