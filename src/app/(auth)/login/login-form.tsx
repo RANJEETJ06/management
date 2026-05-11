@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { siteUrl } from "@/lib/utils";
@@ -8,45 +8,36 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function LoginForm({ next, initialError }: { next?: string; initialError?: string }) {
+export function LoginForm({
+  next,
+  initialError,
+}: {
+  next?: string;
+  initialError?: string;
+}) {
   const router = useRouter();
   const supabase = createClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState<"password" | "magic" | "google" | "recover" | null>(null);
+  const [loading, setLoading] = useState<
+    "password" | "magic" | "google" | null
+  >(null);
   const [error, setError] = useState(initialError ?? "");
   const [info, setInfo] = useState("");
 
-  // Recovery: if Supabase's redirect lands on /login with a ?code=...
-  // (misconfigured Site URL / Redirect URLs), exchange it client-side
-  // instead of leaving the user stranded.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-    if (!code) return;
-    setLoading("recover");
-    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-      if (error) {
-        setError(error.message);
-        setLoading(null);
-        return;
-      }
-      const dest = params.get("next") || next || "/dashboard";
-      window.history.replaceState({}, "", "/login");
-      router.replace(dest);
-      router.refresh();
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const redirectTo = `${siteUrl()}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ""}`;
+  const redirectTo = `${siteUrl()}/auth/callback${
+    next ? `?next=${encodeURIComponent(next)}` : ""
+  }`;
 
   async function signInWithPassword(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setInfo("");
     setLoading("password");
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     setLoading(null);
     if (error) {
       setError(error.message);
@@ -145,7 +136,9 @@ export function LoginForm({ next, initialError }: { next?: string; initialError?
         onClick={signInWithMagicLink}
         disabled={loading !== null}
       >
-        {loading === "magic" ? "Sending link…" : "Email me a sign-in link instead"}
+        {loading === "magic"
+          ? "Sending link…"
+          : "Email me a sign-in link instead"}
       </Button>
     </div>
   );
