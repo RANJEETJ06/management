@@ -22,6 +22,7 @@ const TYPE_LABELS: Record<string, string> = {
 export default async function ContactDetailPage({ params }: { params: { id: string } }) {
   const { orgId, role } = await requireOrg();
   const canEdit = role !== "member";
+  const isMember = role === "member";
   const supabase = createClient();
 
   const { data: contact } = await supabase
@@ -33,7 +34,7 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
 
   if (!contact) notFound();
 
-  const [{ data: interactions }, { data: deals }] = await Promise.all([
+  const [{ data: interactions }, dealsRes] = await Promise.all([
     supabase
       .from("interactions")
       .select("id, occurred_on, summary, location, status")
@@ -41,14 +42,17 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
       .order("occurred_on", { ascending: false })
       .limit(20)
       .returns<Interaction[]>(),
-    supabase
-      .from("deals")
-      .select("id, deal_date, direction, status, amount_total, currency")
-      .eq("contact_id", params.id)
-      .order("deal_date", { ascending: false })
-      .limit(20)
-      .returns<Deal[]>(),
+    isMember
+      ? Promise.resolve({ data: null as Deal[] | null })
+      : supabase
+          .from("deals")
+          .select("id, deal_date, direction, status, amount_total, currency")
+          .eq("contact_id", params.id)
+          .order("deal_date", { ascending: false })
+          .limit(20)
+          .returns<Deal[]>(),
   ]);
+  const deals = dealsRes.data;
 
   return (
     <div className="space-y-6">
@@ -56,20 +60,20 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
         title={contact.name}
         description={`${TYPE_LABELS[contact.type]}${contact.locality ? " · " + contact.locality : ""}`}
         action={
-          canEdit ? (
-            <>
+          <>
+            {canEdit && (
               <Button asChild variant="outline">
                 <Link href={`/contacts/${contact.id}/edit`}>
                   <Pencil className="h-4 w-4" /> Edit
                 </Link>
               </Button>
-              <Button asChild>
-                <Link href={`/interactions/new?contact=${contact.id}`}>
-                  <Plus className="h-4 w-4" /> Log interaction
-                </Link>
-              </Button>
-            </>
-          ) : null
+            )}
+            <Button asChild>
+              <Link href={`/interactions/new?contact=${contact.id}`}>
+                <Plus className="h-4 w-4" /> Log interaction
+              </Link>
+            </Button>
+          </>
         }
       />
 
@@ -126,32 +130,34 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
         )}
       </section>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Deals</h2>
-        {(deals?.length ?? 0) === 0 ? (
-          <p className="text-sm text-muted-foreground">No deals with this contact yet.</p>
-        ) : (
-          <div className="grid gap-2">
-            {deals!.map((d) => (
-              <Link
-                key={d.id}
-                href={`/deals/${d.id}`}
-                className="rounded-md border bg-card p-3 hover:bg-accent/40 flex items-center justify-between gap-2"
-              >
-                <div>
-                  <div className="text-sm font-medium">
-                    {d.direction === "buy" ? "Purchase" : "Sale"} · {formatDate(d.deal_date)}
+      {!isMember && (
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">Deals</h2>
+          {(deals?.length ?? 0) === 0 ? (
+            <p className="text-sm text-muted-foreground">No deals with this contact yet.</p>
+          ) : (
+            <div className="grid gap-2">
+              {deals!.map((d) => (
+                <Link
+                  key={d.id}
+                  href={`/deals/${d.id}`}
+                  className="rounded-md border bg-card p-3 hover:bg-accent/40 flex items-center justify-between gap-2"
+                >
+                  <div>
+                    <div className="text-sm font-medium">
+                      {d.direction === "buy" ? "Purchase" : "Sale"} · {formatDate(d.deal_date)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">{d.status}</div>
                   </div>
-                  <div className="text-xs text-muted-foreground">{d.status}</div>
-                </div>
-                <div className="text-sm font-semibold">
-                  {formatCurrency(d.amount_total, d.currency)}
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
+                  <div className="text-sm font-semibold">
+                    {formatCurrency(d.amount_total, d.currency)}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }

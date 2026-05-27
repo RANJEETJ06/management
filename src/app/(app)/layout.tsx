@@ -11,7 +11,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { activeOrgId, memberships } = await resolveActiveOrg(user.id);
+  const { activeOrgId, activeRole, memberships } = await resolveActiveOrg(user.id);
 
   if (!activeOrgId) {
     // No memberships — see if any pending invitation is waiting.
@@ -33,6 +33,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <Nav
         memberships={memberships}
         activeOrgId={activeOrgId}
+        activeRole={activeRole ?? "member"}
         pendingCount={pendingCount}
         userEmail={user.email ?? ""}
       />

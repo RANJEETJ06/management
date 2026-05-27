@@ -26,7 +26,7 @@ type NavItem = {
 };
 type Membership = { org_id: string; role: string; org_name: string };
 
-const items: NavItem[] = [
+const baseItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/contacts", label: "Contacts", icon: Users },
   { href: "/interactions", label: "Interactions", icon: CalendarClock },
@@ -38,14 +38,20 @@ const items: NavItem[] = [
 export function Nav({
   memberships,
   activeOrgId,
+  activeRole,
   pendingCount,
   userEmail,
 }: {
   memberships: Membership[];
   activeOrgId: string;
+  activeRole: string;
   pendingCount: number;
   userEmail: string;
 }) {
+  const items =
+    activeRole === "member"
+      ? baseItems.filter((i) => i.href !== "/deals")
+      : baseItems;
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();

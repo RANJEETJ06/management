@@ -12,20 +12,22 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const { orgId, role } = await requireOrg();
-  const canEdit = role !== "member";
+  const isMember = role === "member";
   const supabase = createClient();
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const [{ count: contactCount }, { count: interactionCount }, { count: openDeals }, recent, followUps] =
+  const [{ count: contactCount }, { count: interactionCount }, openDealsRes, recent, followUps] =
     await Promise.all([
       supabase.from("contacts").select("id", { count: "exact", head: true }).eq("org_id", orgId),
       supabase.from("interactions").select("id", { count: "exact", head: true }).eq("org_id", orgId),
-      supabase
-        .from("deals")
-        .select("id", { count: "exact", head: true })
-        .eq("org_id", orgId)
-        .in("status", ["pending", "confirmed"]),
+      isMember
+        ? Promise.resolve({ count: 0 })
+        : supabase
+            .from("deals")
+            .select("id", { count: "exact", head: true })
+            .eq("org_id", orgId)
+            .in("status", ["pending", "confirmed"]),
       supabase
         .from("interactions")
         .select("id, occurred_on, summary, contact_id, location, status, contacts(name)")
@@ -49,20 +51,20 @@ export default async function DashboardPage() {
         title="Dashboard"
         description="Your business at a glance."
         action={
-          canEdit ? (
-            <Button asChild>
-              <Link href="/interactions/new">
-                <Plus className="h-4 w-4" /> Log interaction
-              </Link>
-            </Button>
-          ) : null
+          <Button asChild>
+            <Link href="/interactions/new">
+              <Plus className="h-4 w-4" /> Log interaction
+            </Link>
+          </Button>
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className={`grid gap-4 ${isMember ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
         <Stat label="Contacts" value={contactCount ?? 0} href="/contacts" />
         <Stat label="Interactions" value={interactionCount ?? 0} href="/interactions" />
-        <Stat label="Open deals" value={openDeals ?? 0} href="/deals" />
+        {!isMember && (
+          <Stat label="Open deals" value={openDealsRes.count ?? 0} href="/deals" />
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

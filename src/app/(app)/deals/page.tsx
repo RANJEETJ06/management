@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requireOrg } from "@/lib/org";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
@@ -32,7 +33,7 @@ export default async function DealsPage({
   searchParams: { status?: string; direction?: string };
 }) {
   const { orgId, role } = await requireOrg();
-  const canEdit = role !== "member";
+  if (role === "member") redirect("/dashboard");
   const supabase = createClient();
 
   let query = supabase
@@ -68,13 +69,11 @@ export default async function DealsPage({
                 <Download className="h-4 w-4" /> Export
               </a>
             </Button>
-            {canEdit && (
-              <Button asChild>
-                <Link href="/deals/new">
-                  <Plus className="h-4 w-4" /> New deal
-                </Link>
-              </Button>
-            )}
+            <Button asChild>
+              <Link href="/deals/new">
+                <Plus className="h-4 w-4" /> New deal
+              </Link>
+            </Button>
           </>
         }
       />
@@ -107,17 +106,11 @@ export default async function DealsPage({
       {(rows?.length ?? 0) === 0 ? (
         <EmptyState
           title="No deals yet"
-          description={
-            canEdit
-              ? "Capture your first firm order — useful once a conversation turns into a transaction."
-              : "An admin hasn't recorded any deals yet."
-          }
+          description="Capture your first firm order — useful once a conversation turns into a transaction."
           action={
-            canEdit ? (
-              <Button asChild>
-                <Link href="/deals/new">New deal</Link>
-              </Button>
-            ) : undefined
+            <Button asChild>
+              <Link href="/deals/new">New deal</Link>
+            </Button>
           }
         />
       ) : (

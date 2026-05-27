@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Copy, Check } from "lucide-react";
+import { Trash2, Copy, Check, LogOut } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 type Member = { user_id: string; role: string; created_at: string };
@@ -120,6 +120,29 @@ export function TeamManager({
     router.refresh();
   }
 
+  async function leaveWorkspace() {
+    if (!confirm("Leave this workspace? You'll lose access until someone invites you again.")) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/workspace/leave", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orgId }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.ok) {
+        setError(data?.error ?? "Could not leave workspace.");
+        return;
+      }
+      router.push("/");
+      router.refresh();
+    } catch (err: any) {
+      setError(err?.message ?? "Network error.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="space-y-6 max-w-2xl">
       {canManage && (
@@ -200,6 +223,7 @@ export function TeamManager({
             const isSelf = m.user_id === currentUserId;
             const isOwner = m.role === "owner";
             const canRemove = canManage && !isSelf && !isOwner;
+            const canLeave = isSelf && !isOwner;
             return (
               <div key={m.user_id} className="px-4 py-2 flex items-center justify-between text-sm gap-2">
                 <span className="font-mono text-xs text-muted-foreground truncate">
@@ -217,6 +241,17 @@ export function TeamManager({
                       title="Remove member"
                     >
                       <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {canLeave && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={leaveWorkspace}
+                      disabled={busy}
+                      title="Leave this workspace"
+                    >
+                      <LogOut className="h-4 w-4" /> Leave
                     </Button>
                   )}
                 </div>

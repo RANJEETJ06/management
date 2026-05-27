@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { requireOrg } from "@/lib/org";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function DealDetailPage({ params }: { params: { id: string } }) {
   const { orgId, role } = await requireOrg();
-  const canEdit = role !== "member";
+  if (role === "member") redirect("/dashboard");
   const supabase = createClient();
 
   const { data: row } = await supabase
@@ -36,13 +36,11 @@ export default async function DealDetailPage({ params }: { params: { id: string 
         title={`${r.direction === "buy" ? "Purchase" : "Sale"} · ${formatDate(r.deal_date)}`}
         description={r.contacts?.name}
         action={
-          canEdit ? (
-            <Button asChild variant="outline">
-              <Link href={`/deals/${r.id}/edit`}>
-                <Pencil className="h-4 w-4" /> Edit
-              </Link>
-            </Button>
-          ) : null
+          <Button asChild variant="outline">
+            <Link href={`/deals/${r.id}/edit`}>
+              <Pencil className="h-4 w-4" /> Edit
+            </Link>
+          </Button>
         }
       />
 
