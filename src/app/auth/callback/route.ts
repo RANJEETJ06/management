@@ -8,10 +8,15 @@ export async function GET(request: Request) {
   const next = requestUrl.searchParams.get("next") ?? "/dashboard";
 
   if (code) {
-    const supabase = await createClient();
-
+    const supabase = createClient();
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  return NextResponse.redirect(new URL(next, request.url));
+  // Why: on Netlify, `request.url` resolves to the deploy-specific permalink
+  // (e.g. <hash>--micromanagement.netlify.app), so redirects built against it
+  // send the browser to a different origin where the session cookie isn't
+  // present. Anchor the redirect to NEXT_PUBLIC_SITE_URL so we stay on the
+  // canonical domain.
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? requestUrl.origin;
+  return NextResponse.redirect(new URL(next, base));
 }
