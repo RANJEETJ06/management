@@ -71,7 +71,51 @@ export default async function DealDetailPage({ params }: { params: { id: string 
         </CardContent>
       </Card>
 
-      <div className="rounded-md border bg-card overflow-hidden">
+      <div className="space-y-3 md:hidden">
+        {r.deal_items.map((it: any) => (
+          <div key={it.id} className="rounded-md border bg-card p-4 space-y-2">
+            <div className="flex items-start justify-between gap-3">
+              <div className="font-medium">{it.item_name}</div>
+              <div className="text-sm font-semibold text-right">
+                {formatCurrency(it.line_total, r.currency)}
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="text-muted-foreground">Category</span>
+              <span>{it.categories?.name || "—"}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="text-muted-foreground">Qty</span>
+              <span>
+                {it.quantity} {it.unit}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="text-muted-foreground">Price/unit</span>
+              <span>{formatCurrency(it.price_per_unit, r.currency)}</span>
+            </div>
+          </div>
+        ))}
+
+        <div className="rounded-md border bg-card p-4 space-y-2 text-sm">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground">Total</span>
+            <span className="font-semibold">{formatCurrency(r.amount_total, r.currency)}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground">Paid</span>
+            <span>{formatCurrency(r.amount_paid, r.currency)}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground">Outstanding</span>
+            <span className="font-medium">
+              {formatCurrency((r.amount_total ?? 0) - (r.amount_paid ?? 0), r.currency)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="hidden md:block rounded-md border bg-card overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left">
             <tr>

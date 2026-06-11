@@ -67,7 +67,7 @@ export function WorkspaceSwitcher({
       <button
         type="button"
         onClick={() => setOpen((s) => !s)}
-        className="w-full text-left rounded-md border bg-card px-3 py-2 hover:bg-accent transition-colors flex items-center justify-between gap-2"
+        className="w-full text-left rounded-md border bg-card px-3 py-3 hover:bg-accent transition-colors flex items-center justify-between gap-2"
         aria-haspopup="listbox"
         aria-expanded={open}
       >
@@ -85,7 +85,7 @@ export function WorkspaceSwitcher({
       {open && (
         <div
           role="listbox"
-          className="absolute z-50 mt-1 w-full rounded-md border bg-white shadow-lg p-1"
+          className="absolute z-50 mt-1 w-full rounded-md border bg-card shadow-lg p-1"
         >
           <div className="max-h-64 overflow-y-auto">
             {memberships.map((m) => {

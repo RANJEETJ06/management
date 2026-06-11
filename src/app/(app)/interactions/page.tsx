@@ -101,7 +101,11 @@ export default async function InteractionsPage({
           <option value="closed">Closed</option>
           <option value="dropped">Dropped</option>
         </select>
-        <Button type="submit" variant="secondary" className="sm:col-span-5 sm:w-auto sm:justify-self-start">
+        <Button
+          type="submit"
+          variant="secondary"
+          className="w-full sm:col-span-5 sm:w-auto sm:justify-self-start"
+        >
           Filter
         </Button>
       </form>

@@ -116,6 +116,16 @@ export interface DealItem {
   notes: string | null;
 }
 
+export interface PendingInvitation {
+  id: string;
+  org_id: string;
+  org_name: string;
+  email: string;
+  role: string;
+  invited_by: string;
+  created_at: string;
+}
+
 type Insert<T, Required extends keyof T = never> = Partial<T> & Pick<T, Required>;
 type Update<T> = Partial<T>;
 
@@ -173,6 +183,10 @@ export interface Database {
       current_org_id: { Args: Record<string, never>; Returns: string | null };
       is_member_of: { Args: { target_org: string }; Returns: boolean };
       create_workspace: { Args: { workspace_name: string }; Returns: string };
+      my_pending_invitations: {
+        Args: Record<string, never>;
+        Returns: PendingInvitation[];
+      };
     };
   };
 }

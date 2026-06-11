@@ -110,11 +110,14 @@ export function Nav({
   return (
     <>
       {/* Mobile top bar */}
-      <header className="md:hidden sticky top-0 z-30 flex items-center justify-between border-b bg-background px-4 py-3">
-        <div className="font-semibold truncate">{activeName}</div>
+      <header className="md:hidden sticky top-0 z-30 flex items-center justify-between gap-3 border-b bg-background/95 px-4 py-3 backdrop-blur">
+        <div className="min-w-0">
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Workspace</div>
+          <div className="font-semibold truncate">{activeName}</div>
+        </div>
         <button
           onClick={() => setMobileOpen((s) => !s)}
-          className="rounded-md p-2 hover:bg-accent"
+          className="rounded-md p-2.5 hover:bg-accent"
           aria-label="Toggle menu"
         >
           {mobileOpen ? (
@@ -128,12 +131,12 @@ export function Nav({
       {/* Mobile drawer */}
       {mobileOpen && (
         <div
-          className="md:hidden fixed inset-0 z-40 bg-black/30"
+          className="md:hidden fixed inset-0 z-40 bg-black/40"
           onClick={() => setMobileOpen(false)}
         >
           <aside
             onClick={(e) => e.stopPropagation()}
-            className="absolute left-0 top-0 h-full w-72 bg-background p-4 flex flex-col"
+            className="absolute left-0 top-0 h-full w-[min(20rem,calc(100vw-1rem))] bg-background p-4 flex flex-col shadow-2xl"
           >
             <div className="pb-3">
               <WorkspaceSwitcher
@@ -149,7 +152,7 @@ export function Nav({
       )}
 
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 md:border-r md:bg-background md:p-4">
+      <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 md:border-r md:bg-background md:p-4 md:overflow-y-auto">
         <div className="pb-3">
           <WorkspaceSwitcher
             memberships={memberships}

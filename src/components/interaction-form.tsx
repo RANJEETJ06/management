@@ -97,6 +97,8 @@ export function InteractionForm({
     e.preventDefault();
     setError("");
     setLoading(true);
+    const interactionsTable = supabase.from("interactions") as any;
+    const interactionItemsTable = supabase.from("interaction_items") as any;
 
     const payload = {
       contact_id: form.contact_id || null,
@@ -111,7 +113,7 @@ export function InteractionForm({
     let interactionId: string;
 
     if (editing) {
-      const { error } = await supabase.from("interactions").update(payload).eq("id", initial!.id);
+      const { error } = await interactionsTable.update(payload).eq("id", initial!.id);
       if (error) {
         setError(error.message);
         setLoading(false);
@@ -119,19 +121,18 @@ export function InteractionForm({
       }
       interactionId = initial!.id;
       // Replace items: easiest correct approach for MVP.
-      await supabase.from("interaction_items").delete().eq("interaction_id", interactionId);
+      await interactionItemsTable.delete().eq("interaction_id", interactionId);
     } else {
-      const { data, error } = await supabase
-        .from("interactions")
-        .insert({ ...payload, org_id: orgId } as any)
+      const { data, error } = await interactionsTable
+        .insert({ ...payload, org_id: orgId })
         .select("id")
-        .single<{ id: string }>();
+        .single();
       if (error || !data) {
         setError(error?.message || "Could not save");
         setLoading(false);
         return;
       }
-      interactionId = data.id;
+      interactionId = (data as { id: string }).id;
     }
 
     const itemsToInsert = items
@@ -147,7 +148,7 @@ export function InteractionForm({
       }));
 
     if (itemsToInsert.length > 0) {
-      const { error: itemErr } = await supabase.from("interaction_items").insert(itemsToInsert as any);
+      const { error: itemErr } = await interactionItemsTable.insert(itemsToInsert);
       if (itemErr) {
         setError(itemErr.message);
         setLoading(false);
@@ -163,7 +164,7 @@ export function InteractionForm({
     if (!editing) return;
     if (!confirm("Delete this interaction? This cannot be undone.")) return;
     setLoading(true);
-    const { error } = await supabase.from("interactions").delete().eq("id", initial!.id);
+    const { error } = await (supabase.from("interactions") as any).delete().eq("id", initial!.id);
     if (error) {
       setError(error.message);
       setLoading(false);
@@ -266,9 +267,9 @@ export function InteractionForm({
       </div>
 
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="text-sm font-semibold">Items discussed</h3>
-          <Button type="button" variant="ghost" size="sm" onClick={addItem}>
+          <Button type="button" variant="ghost" size="sm" onClick={addItem} className="w-full sm:w-auto">
             <Plus className="h-4 w-4" /> Add row
           </Button>
         </div>
@@ -341,16 +342,28 @@ export function InteractionForm({
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={loading}>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Button type="submit" disabled={loading} className="w-full sm:w-auto">
           {loading ? "Saving…" : editing ? "Save changes" : "Log interaction"}
         </Button>
         {editing && (
-          <Button type="button" variant="destructive" onClick={remove} disabled={loading}>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={remove}
+            disabled={loading}
+            className="w-full sm:w-auto"
+          >
             Delete
           </Button>
         )}
-        <Button type="button" variant="ghost" onClick={() => router.back()} disabled={loading}>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => router.back()}
+          disabled={loading}
+          className="w-full sm:w-auto"
+        >
           Cancel
         </Button>
       </div>

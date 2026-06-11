@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { OnboardingForm } from "./onboarding-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import type { PendingInvitation } from "@/lib/types";
 
 export default async function OnboardingPage({
   searchParams,
@@ -20,16 +21,14 @@ export default async function OnboardingPage({
     .eq("user_id", user.id)
     .limit(1);
 
-  if (existing && existing.length > 0) {
+  if (((existing ?? []) as { org_id: string }[]).length > 0) {
     redirect("/dashboard");
   }
 
   // If a teammate invited them while they had no workspace, send them through
   // the explicit accept/decline flow before offering to create their own.
-  const { data: pending } = await supabase
-    .rpc("my_pending_invitations")
-    .returns<unknown[]>();
-  if (pending && pending.length > 0) {
+  const { data: pending } = await supabase.rpc("my_pending_invitations");
+  if (((pending ?? []) as PendingInvitation[]).length > 0) {
     redirect("/invitations");
   }
 

@@ -37,6 +37,7 @@ export function ContactForm({
     e.preventDefault();
     setError("");
     setLoading(true);
+    const contactsTable = supabase.from("contacts") as any;
 
     const payload = {
       ...form,
@@ -49,7 +50,7 @@ export function ContactForm({
     };
 
     if (editing) {
-      const { error } = await supabase.from("contacts").update(payload).eq("id", initial!.id);
+      const { error } = await contactsTable.update(payload).eq("id", initial!.id);
       if (error) {
         setError(error.message);
         setLoading(false);
@@ -57,17 +58,16 @@ export function ContactForm({
       }
       router.push(`/contacts/${initial!.id}`);
     } else {
-      const { data, error } = await supabase
-        .from("contacts")
-        .insert({ ...payload, org_id: orgId } as any)
+      const { data, error } = await contactsTable
+        .insert({ ...payload, org_id: orgId })
         .select("id")
-        .single<{ id: string }>();
+        .single();
       if (error || !data) {
         setError(error?.message || "Could not save");
         setLoading(false);
         return;
       }
-      router.push(`/contacts/${data.id}`);
+      router.push(`/contacts/${(data as { id: string }).id}`);
     }
     router.refresh();
   }
@@ -76,7 +76,7 @@ export function ContactForm({
     if (!editing) return;
     if (!confirm("Delete this contact? Linked interactions and deals will keep their record.")) return;
     setLoading(true);
-    const { error } = await supabase.from("contacts").delete().eq("id", initial!.id);
+    const { error } = await (supabase.from("contacts") as any).delete().eq("id", initial!.id);
     if (error) {
       setError(error.message);
       setLoading(false);
@@ -165,16 +165,28 @@ export function ContactForm({
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={loading}>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Button type="submit" disabled={loading} className="w-full sm:w-auto">
           {loading ? "Saving…" : editing ? "Save changes" : "Add contact"}
         </Button>
         {editing && (
-          <Button type="button" variant="destructive" onClick={remove} disabled={loading}>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={remove}
+            disabled={loading}
+            className="w-full sm:w-auto"
+          >
             Delete
           </Button>
         )}
-        <Button type="button" variant="ghost" onClick={() => router.back()} disabled={loading}>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => router.back()}
+          disabled={loading}
+          className="w-full sm:w-auto"
+        >
           Cancel
         </Button>
       </div>

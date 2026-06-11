@@ -96,7 +96,7 @@ export default async function ContactsPage({
           defaultValue={searchParams.locality ?? ""}
           className="h-10 rounded-md border border-input bg-background px-3 text-sm w-full sm:w-40"
         />
-        <Button type="submit" variant="secondary">
+        <Button type="submit" variant="secondary" className="w-full sm:w-auto">
           Filter
         </Button>
       </form>

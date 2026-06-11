@@ -78,7 +78,7 @@ export default async function DealsPage({
         }
       />
 
-      <form className="flex flex-wrap gap-2">
+      <form className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
         <select
           name="direction"
           defaultValue={searchParams.direction ?? ""}
@@ -100,7 +100,9 @@ export default async function DealsPage({
           <option value="paid">Paid</option>
           <option value="cancelled">Cancelled</option>
         </select>
-        <Button type="submit" variant="secondary">Filter</Button>
+        <Button type="submit" variant="secondary" className="w-full sm:w-auto">
+          Filter
+        </Button>
       </form>
 
       {(rows?.length ?? 0) === 0 ? (

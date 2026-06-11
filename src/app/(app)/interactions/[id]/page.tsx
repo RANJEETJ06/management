@@ -84,7 +84,29 @@ export default async function InteractionDetailPage({ params }: { params: { id: 
       {r.interaction_items?.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Items</h2>
-          <div className="rounded-md border bg-card overflow-hidden">
+          <div className="space-y-3 md:hidden">
+            {r.interaction_items.map((it: any) => (
+              <div key={it.id} className="rounded-md border bg-card p-4 space-y-2">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="font-medium">{it.item_name || "—"}</div>
+                  <div className="text-sm text-muted-foreground text-right">
+                    {it.quantity != null ? `${it.quantity} ${it.unit || ""}` : "—"}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="text-muted-foreground">Category</span>
+                  <span>{it.categories?.name || "—"}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="text-muted-foreground">Price/unit</span>
+                  <span>{it.price_per_unit != null ? formatCurrency(it.price_per_unit) : "—"}</span>
+                </div>
+                {it.notes && <div className="text-sm text-muted-foreground">{it.notes}</div>}
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden md:block rounded-md border bg-card overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-left">
                 <tr>

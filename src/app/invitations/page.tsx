@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { InvitationActions } from "./invitation-actions";
+import type { PendingInvitation } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -30,8 +31,8 @@ export default async function InvitationsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data } = await supabase.rpc("my_pending_invitations").returns<Pending[]>();
-  const pending = data ?? [];
+  const { data } = await supabase.rpc("my_pending_invitations");
+  const pending = ((data ?? []) as PendingInvitation[]) as Pending[];
 
   // If they have at least one workspace already, give them a way back to it.
   const { data: members } = await supabase
@@ -39,7 +40,7 @@ export default async function InvitationsPage() {
     .select("org_id")
     .eq("user_id", user.id)
     .limit(1);
-  const hasWorkspace = (members ?? []).length > 0;
+  const hasWorkspace = ((members ?? []) as { org_id: string }[]).length > 0;
 
   return (
     <div className="min-h-screen flex items-start justify-center bg-gradient-to-br from-emerald-50 via-white to-emerald-100 px-4 py-10">

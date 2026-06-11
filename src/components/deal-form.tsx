@@ -116,6 +116,8 @@ export function DealForm({
     }
 
     setLoading(true);
+    const dealsTable = supabase.from("deals") as any;
+    const dealItemsTable = supabase.from("deal_items") as any;
 
     const payload = {
       contact_id: form.contact_id,
@@ -132,29 +134,28 @@ export function DealForm({
 
     let dealId: string;
     if (editing) {
-      const { error } = await supabase.from("deals").update(payload as any).eq("id", initial!.id);
+      const { error } = await dealsTable.update(payload).eq("id", initial!.id);
       if (error) {
         setError(error.message);
         setLoading(false);
         return;
       }
       dealId = initial!.id;
-      await supabase.from("deal_items").delete().eq("deal_id", dealId);
+      await dealItemsTable.delete().eq("deal_id", dealId);
     } else {
-      const { data, error } = await supabase
-        .from("deals")
-        .insert({ ...payload, org_id: orgId } as any)
+      const { data, error } = await dealsTable
+        .insert({ ...payload, org_id: orgId })
         .select("id")
-        .single<{ id: string }>();
+        .single();
       if (error || !data) {
         setError(error?.message || "Could not save");
         setLoading(false);
         return;
       }
-      dealId = data.id;
+      dealId = (data as { id: string }).id;
     }
 
-    const { error: itemErr } = await supabase.from("deal_items").insert(
+    const { error: itemErr } = await dealItemsTable.insert(
       validLines.map((l) => ({
         deal_id: dealId,
         category_id: l.category_id || null,
@@ -163,7 +164,7 @@ export function DealForm({
         unit: l.unit.trim() || "kg",
         price_per_unit: Number(l.price_per_unit),
         notes: l.notes.trim() || null,
-      })) as any
+      }))
     );
 
     if (itemErr) {
@@ -180,7 +181,7 @@ export function DealForm({
     if (!editing) return;
     if (!confirm("Delete this deal?")) return;
     setLoading(true);
-    const { error } = await supabase.from("deals").delete().eq("id", initial!.id);
+    const { error } = await (supabase.from("deals") as any).delete().eq("id", initial!.id);
     if (error) {
       setError(error.message);
       setLoading(false);
@@ -294,9 +295,15 @@ export function DealForm({
       </div>
 
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="text-sm font-semibold">Items</h3>
-          <Button type="button" variant="ghost" size="sm" onClick={() => setLines([...lines, emptyLine()])}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setLines([...lines, emptyLine()])}
+            className="w-full sm:w-auto"
+          >
             <Plus className="h-4 w-4" /> Add row
           </Button>
         </div>
@@ -378,16 +385,28 @@ export function DealForm({
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={loading}>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Button type="submit" disabled={loading} className="w-full sm:w-auto">
           {loading ? "Saving…" : editing ? "Save changes" : "Create deal"}
         </Button>
         {editing && (
-          <Button type="button" variant="destructive" onClick={remove} disabled={loading}>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={remove}
+            disabled={loading}
+            className="w-full sm:w-auto"
+          >
             Delete
           </Button>
         )}
-        <Button type="button" variant="ghost" onClick={() => router.back()} disabled={loading}>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => router.back()}
+          disabled={loading}
+          className="w-full sm:w-auto"
+        >
           Cancel
         </Button>
       </div>

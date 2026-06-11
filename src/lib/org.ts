@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { resolveActiveOrg, type Membership } from "@/lib/active-org";
+import type { PendingInvitation } from "@/lib/types";
 
 /**
  * Returns { user, orgId, role, memberships } for the current request.
@@ -27,10 +28,8 @@ export async function requireOrg(): Promise<{
 
   if (!activeOrgId) {
     // No memberships — see if a pending invitation is waiting for them.
-    const { data: pending } = await supabase
-      .rpc("my_pending_invitations")
-      .returns<unknown[]>();
-    if (pending && pending.length > 0) redirect("/invitations");
+    const { data: pending } = await supabase.rpc("my_pending_invitations");
+    if (((pending ?? []) as PendingInvitation[]).length > 0) redirect("/invitations");
     redirect("/onboarding");
   }
 
