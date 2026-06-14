@@ -122,7 +122,7 @@ export function LoginForm({
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
-        {info && <p className="text-sm text-emerald-700">{info}</p>}
+        {info && <p className="text-sm font-medium text-primary">{info}</p>}
 
         <Button type="submit" className="w-full" disabled={loading !== null}>
           {loading === "password" ? "Signing in…" : "Sign in"}

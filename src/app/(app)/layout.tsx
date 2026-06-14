@@ -26,7 +26,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const pendingCount = ((pendingRows ?? []) as PendingInvitation[]).length;
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen">
       <Nav
         memberships={memberships}
         activeOrgId={activeOrgId}
@@ -35,7 +35,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         userEmail={user.email ?? ""}
       />
       <main className="md:pl-64">
-        <div className="container max-w-6xl px-4 py-4 sm:px-6 sm:py-6 md:px-8 md:py-8">
+        <div className="container max-w-6xl px-4 py-6 sm:px-6 sm:py-8 md:px-10 md:py-10">
           {children}
         </div>
       </main>

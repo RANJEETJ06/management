@@ -4,23 +4,39 @@ export function EmptyState({
   title,
   description,
   action,
+  icon,
   className,
 }: {
   title: string;
   description?: string;
   action?: React.ReactNode;
+  icon?: React.ReactNode;
   className?: string;
 }) {
   return (
     <div
       className={cn(
-        "rounded-lg border border-dashed bg-card p-6 sm:p-10 text-center text-card-foreground",
+        "relative overflow-hidden rounded-lg border border-dashed border-border bg-card/60 p-8 sm:p-14 text-center text-card-foreground",
         className
       )}
     >
-      <h3 className="font-medium">{title}</h3>
-      {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
-      {action && <div className="mt-4 flex justify-center">{action}</div>}
+      {/* soft gold glow behind the prompt */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 -top-16 mx-auto h-40 w-40 rounded-full bg-gold/10 blur-3xl"
+      />
+      <div className="relative">
+        {icon && (
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent text-accent-foreground">
+            {icon}
+          </div>
+        )}
+        <h3 className="font-display text-lg font-semibold">{title}</h3>
+        {description && (
+          <p className="mx-auto mt-1.5 max-w-sm text-sm text-muted-foreground">{description}</p>
+        )}
+        {action && <div className="mt-5 flex justify-center">{action}</div>}
+      </div>
     </div>
   );
 }

@@ -9,9 +9,10 @@ export default function LoginPage({
 }) {
   return (
     <Card className="shadow-lg">
-      <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl">Welcome back</CardTitle>
-        <CardDescription>Sign in to your business workspace.</CardDescription>
+      <CardHeader className="space-y-2 text-center">
+        <div className="eyebrow mx-auto">Welcome back</div>
+        <CardTitle className="text-[1.6rem]">Sign in to your workspace</CardTitle>
+        <CardDescription>Pick up your business diary right where you left off.</CardDescription>
       </CardHeader>
       <CardContent>
         <LoginForm next={searchParams.next} initialError={searchParams.error} />

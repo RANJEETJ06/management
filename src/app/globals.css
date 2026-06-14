@@ -4,51 +4,152 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 224 71% 4%;
-    --card: 0 0% 100%;
-    --card-foreground: 224 71% 4%;
-    --primary: 142 72% 29%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 142 76% 95%;
-    --accent-foreground: 142 72% 20%;
-    --destructive: 0 84% 60%;
+    /* Almanac — warm cream paper, deep pine ink, amber accent. */
+    --background: 40 38% 96%;
+    --foreground: 158 26% 12%;
+
+    --surface: 42 33% 94%;
+    --surface-foreground: 158 22% 16%;
+
+    --card: 40 50% 99%;
+    --card-foreground: 158 26% 12%;
+
+    --primary: 158 52% 24%;
+    --primary-foreground: 42 50% 97%;
+
+    --secondary: 40 28% 90%;
+    --secondary-foreground: 158 24% 18%;
+
+    --muted: 40 24% 92%;
+    --muted-foreground: 152 9% 38%;
+
+    /* Soft hover surface (warm neutral, not the loud accent). */
+    --accent: 152 26% 90%;
+    --accent-foreground: 158 44% 20%;
+
+    /* Amber / ochre highlight — follow-ups, badges, decorative marks. */
+    --gold: 34 78% 46%;
+    --gold-foreground: 30 50% 98%;
+    --gold-soft: 38 70% 88%;
+
+    --destructive: 4 64% 48%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 142 72% 29%;
-    --radius: 0.6rem;
+
+    --border: 40 20% 85%;
+    --input: 40 20% 82%;
+    --ring: 158 52% 28%;
+
+    --radius: 0.7rem;
   }
 
   .dark {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
-    --primary: 142 70% 45%;
-    --primary-foreground: 222 47% 6%;
-    --secondary: 217 33% 18%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 18%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 142 30% 18%;
-    --accent-foreground: 142 76% 80%;
-    --destructive: 0 63% 40%;
+    --background: 160 22% 7%;
+    --foreground: 42 30% 92%;
+
+    --surface: 160 20% 9%;
+    --surface-foreground: 42 24% 88%;
+
+    --card: 160 19% 10%;
+    --card-foreground: 42 30% 92%;
+
+    --primary: 152 48% 52%;
+    --primary-foreground: 160 30% 8%;
+
+    --secondary: 158 14% 17%;
+    --secondary-foreground: 42 26% 90%;
+
+    --muted: 158 12% 16%;
+    --muted-foreground: 150 10% 60%;
+
+    --accent: 158 22% 18%;
+    --accent-foreground: 152 44% 78%;
+
+    --gold: 38 82% 58%;
+    --gold-foreground: 36 40% 10%;
+    --gold-soft: 36 30% 22%;
+
+    --destructive: 4 58% 52%;
     --destructive-foreground: 0 0% 100%;
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 142 70% 45%;
+
+    --border: 158 14% 20%;
+    --input: 158 14% 22%;
+    --ring: 152 48% 48%;
   }
 
   * {
     @apply border-border;
   }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "ss01" 1, "cv05" 1, "calt" 1;
+    /* Faint two-tone paper wash so the canvas never reads as flat white. */
+    background-image:
+      radial-gradient(60rem 60rem at 100% -10%, hsl(var(--gold) / 0.05), transparent 55%),
+      radial-gradient(50rem 50rem at -10% 110%, hsl(var(--primary) / 0.05), transparent 55%);
+    background-attachment: fixed;
+  }
+
+  /* Display serif gets optical sizing + tighter editorial tracking. */
+  .font-display {
+    font-optical-sizing: auto;
+    letter-spacing: -0.015em;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.18);
+    color: hsl(var(--foreground));
+  }
+
+  /* Refined, accessible focus ring everywhere. */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring) / 0.6);
+    outline-offset: 2px;
+  }
+
+  /* Warm, slim scrollbars. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.35) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 9999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+    background-clip: content-box;
+  }
+}
+
+@layer components {
+  /* Tabular figures for stats, money, dates. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  /* Small editorial eyebrow label. */
+  .eyebrow {
+    @apply text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground;
+  }
+
+  /* The gold rule that sits beneath page titles. */
+  .accent-rule {
+    height: 2px;
+    width: 2.5rem;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, hsl(var(--gold)), hsl(var(--gold) / 0.15));
   }
 }

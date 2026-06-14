@@ -15,6 +15,7 @@ import {
   LogOut,
   Menu,
   X,
+  NotebookPen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
@@ -64,7 +65,8 @@ export function Nav({
   }
 
   const NavLinks = () => (
-    <nav className="flex-1 space-y-1">
+    <nav className="flex-1 space-y-0.5">
+      <div className="eyebrow px-3 pb-2 pt-1">Menu</div>
       {items.map((item) => {
         const active =
           pathname === item.href || pathname.startsWith(item.href + "/");
@@ -75,13 +77,23 @@ export function Nav({
             href={item.href}
             onClick={() => setMobileOpen(false)}
             className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+              "group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200",
               active
-                ? "bg-primary/10 text-primary"
+                ? "bg-primary/[0.08] text-primary"
                 : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             )}
           >
-            <Icon className="h-4 w-4" />
+            {active && (
+              <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-gold" />
+            )}
+            <Icon
+              className={cn(
+                "h-[1.05rem] w-[1.05rem] transition-colors",
+                active
+                  ? "text-primary"
+                  : "text-muted-foreground/70 group-hover:text-accent-foreground"
+              )}
+            />
             {item.label}
           </Link>
         );
@@ -89,15 +101,36 @@ export function Nav({
     </nav>
   );
 
+  const Brand = () => (
+    <div className="flex items-center gap-2.5 px-1 pb-4">
+      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+        <NotebookPen className="h-[1.1rem] w-[1.1rem]" />
+      </div>
+      <div className="leading-tight">
+        <div className="font-display text-[1.05rem] font-semibold tracking-tight">
+          Data Manager
+        </div>
+        <div className="text-[0.65rem] uppercase tracking-[0.16em] text-muted-foreground">
+          Business Almanac
+        </div>
+      </div>
+    </div>
+  );
+
   const Footer = () => (
-    <div className="border-t pt-3 mt-3">
-      <div className="px-3 pb-2">
-        <div className="text-xs text-muted-foreground">Signed in as</div>
-        <div className="text-sm font-medium truncate">{userEmail}</div>
+    <div className="border-t border-border/70 pt-3 mt-3">
+      <div className="flex items-center gap-2.5 px-2 pb-2">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-[0.7rem] font-semibold uppercase text-accent-foreground">
+          {(userEmail[0] ?? "?").toUpperCase()}
+        </div>
+        <div className="min-w-0">
+          <div className="eyebrow">Signed in as</div>
+          <div className="text-[0.8rem] font-medium truncate">{userEmail}</div>
+        </div>
       </div>
       <button
         onClick={signOut}
-        className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+        className="mt-1 flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
       >
         <LogOut className="h-4 w-4" /> Sign out
       </button>
@@ -110,14 +143,19 @@ export function Nav({
   return (
     <>
       {/* Mobile top bar */}
-      <header className="md:hidden sticky top-0 z-30 flex items-center justify-between gap-3 border-b bg-background/95 px-4 py-3 backdrop-blur">
-        <div className="min-w-0">
-          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Workspace</div>
-          <div className="font-semibold truncate">{activeName}</div>
+      <header className="md:hidden sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border/70 bg-surface/90 px-4 py-3 backdrop-blur-md">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <NotebookPen className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Workspace</div>
+            <div className="font-display font-semibold truncate leading-tight">{activeName}</div>
+          </div>
         </div>
         <button
           onClick={() => setMobileOpen((s) => !s)}
-          className="rounded-md p-2.5 hover:bg-accent"
+          className="rounded-md p-2.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
           aria-label="Toggle menu"
         >
           {mobileOpen ? (
@@ -136,8 +174,9 @@ export function Nav({
         >
           <aside
             onClick={(e) => e.stopPropagation()}
-            className="absolute left-0 top-0 h-full w-[min(20rem,calc(100vw-1rem))] bg-background p-4 flex flex-col shadow-2xl"
+            className="absolute left-0 top-0 h-full w-[min(20rem,calc(100vw-1rem))] bg-surface p-4 flex flex-col shadow-lg animate-fade-in"
           >
+            <Brand />
             <div className="pb-3">
               <WorkspaceSwitcher
                 memberships={memberships}
@@ -152,7 +191,8 @@ export function Nav({
       )}
 
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 md:border-r md:bg-background md:p-4 md:overflow-y-auto">
+      <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 md:border-r md:border-border/70 md:bg-surface md:p-4 md:overflow-y-auto">
+        <Brand />
         <div className="pb-3">
           <WorkspaceSwitcher
             memberships={memberships}

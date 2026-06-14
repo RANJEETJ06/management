@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, relativeDate } from "@/lib/utils";
-import { Plus, ArrowRight } from "lucide-react";
+import { Plus, ArrowRight, ArrowUpRight, Users, CalendarClock, Receipt } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -60,10 +60,10 @@ export default async function DashboardPage() {
       />
 
       <div className={`grid gap-4 ${isMember ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
-        <Stat label="Contacts" value={contactCount ?? 0} href="/contacts" />
-        <Stat label="Interactions" value={interactionCount ?? 0} href="/interactions" />
+        <Stat label="Contacts" value={contactCount ?? 0} href="/contacts" icon={Users} />
+        <Stat label="Interactions" value={interactionCount ?? 0} href="/interactions" icon={CalendarClock} />
         {!isMember && (
-          <Stat label="Open deals" value={openDealsRes.count ?? 0} href="/deals" />
+          <Stat label="Open deals" value={openDealsRes.count ?? 0} href="/deals" icon={Receipt} />
         )}
       </div>
 
@@ -142,13 +142,33 @@ export default async function DashboardPage() {
   );
 }
 
-function Stat({ label, value, href }: { label: string; value: number; href: string }) {
+function Stat({
+  label,
+  value,
+  href,
+  icon: Icon,
+}: {
+  label: string;
+  value: number;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+}) {
   return (
     <Link href={href} className="group">
-      <Card className="transition-shadow group-hover:shadow-md">
+      <Card className="relative overflow-hidden group-hover:shadow-md group-hover:-translate-y-0.5 transition-all duration-300">
         <CardContent className="p-5">
-          <div className="text-sm text-muted-foreground">{label}</div>
-          <div className="text-3xl font-semibold mt-1">{value}</div>
+          <div className="flex items-start justify-between">
+            <div className="eyebrow">{label}</div>
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-accent-foreground transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+              <Icon className="h-4 w-4" />
+            </span>
+          </div>
+          <div className="font-display text-4xl font-semibold mt-2 tnum tracking-tight">
+            {value}
+          </div>
+          <div className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors group-hover:text-primary">
+            View all <ArrowUpRight className="h-3.5 w-3.5" />
+          </div>
         </CardContent>
       </Card>
     </Link>

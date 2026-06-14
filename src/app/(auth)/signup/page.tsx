@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export default function SignupPage() {
   return (
     <Card className="shadow-lg">
-      <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl">Create your account</CardTitle>
+      <CardHeader className="space-y-2 text-center">
+        <div className="eyebrow mx-auto">Get started</div>
+        <CardTitle className="text-[1.6rem]">Create your account</CardTitle>
         <CardDescription>Set up a workspace for your business in seconds.</CardDescription>
       </CardHeader>
       <CardContent>

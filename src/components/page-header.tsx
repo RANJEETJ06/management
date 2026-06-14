@@ -12,12 +12,26 @@ export function PageHeader({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-6", className)}>
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">{title}</h1>
-        {description && <p className="text-muted-foreground text-sm mt-1">{description}</p>}
+    <div
+      className={cn(
+        "flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-7 animate-fade-up",
+        className
+      )}
+    >
+      <div className="min-w-0">
+        <h1 className="font-display text-[1.7rem] sm:text-[2rem] font-semibold leading-tight tracking-tight text-foreground">
+          {title}
+        </h1>
+        <div className="accent-rule mt-2.5" />
+        {description && (
+          <p className="text-muted-foreground text-sm mt-2.5 max-w-prose">{description}</p>
+        )}
       </div>
-      {action && <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">{action}</div>}
+      {action && (
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end shrink-0">
+          {action}
+        </div>
+      )}
     </div>
   );
 }
