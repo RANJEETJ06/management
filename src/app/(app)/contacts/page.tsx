@@ -21,7 +21,7 @@ const TYPE_LABELS: Record<ContactType, string> = {
 export default async function ContactsPage({
   searchParams,
 }: {
-  searchParams: { q?: string; type?: string; locality?: string };
+  searchParams: { q?: string; type?: string; locality?: string; tag?: string };
 }) {
   const { orgId } = await requireOrg();
   const supabase = createClient();
@@ -41,6 +41,9 @@ export default async function ContactsPage({
   }
   if (searchParams.locality) {
     query = query.ilike("locality", `%${searchParams.locality}%`);
+  }
+  if (searchParams.tag) {
+    query = query.contains("tags", [searchParams.tag]);
   }
   if (searchParams.q) {
     const q = searchParams.q.replace(/[%_]/g, "\\$&");
@@ -96,6 +99,12 @@ export default async function ContactsPage({
           defaultValue={searchParams.locality ?? ""}
           className="h-10 rounded-md border border-input bg-background px-3 text-sm w-full sm:w-40"
         />
+        <input
+          name="tag"
+          placeholder="Tag"
+          defaultValue={searchParams.tag ?? ""}
+          className="h-10 rounded-md border border-input bg-background px-3 text-sm w-full sm:w-32"
+        />
         <Button type="submit" variant="secondary" className="w-full sm:w-auto">
           Filter
         </Button>
@@ -135,6 +144,18 @@ export default async function ContactsPage({
                   {c.locality && (
                     <div className="text-sm text-muted-foreground flex items-center gap-1">
                       <MapPin className="h-3 w-3" /> {c.locality}
+                    </div>
+                  )}
+                  {c.tags?.length > 0 && (
+                    <div className="flex flex-wrap gap-1 pt-1">
+                      {c.tags.slice(0, 3).map((t) => (
+                        <span
+                          key={t}
+                          className="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground"
+                        >
+                          {t}
+                        </span>
+                      ))}
                     </div>
                   )}
                 </CardContent>

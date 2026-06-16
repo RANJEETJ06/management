@@ -11,6 +11,33 @@ export type PaymentStatus = "unpaid" | "partial" | "paid";
 export type MemberRole = "owner" | "admin" | "member";
 export type TaskStatus = "open" | "done";
 export type TaskPriority = "low" | "normal" | "high";
+export type LeadSource =
+  | "web"
+  | "referral"
+  | "cold_call"
+  | "event"
+  | "social"
+  | "email"
+  | "other";
+export type LeadStatus =
+  | "new"
+  | "qualified"
+  | "proposal"
+  | "negotiation"
+  | "won"
+  | "lost";
+
+/** Free-form social/web handles stored on contacts & accounts (jsonb). */
+export interface SocialLinks {
+  website?: string;
+  linkedin?: string;
+  twitter?: string;
+  instagram?: string;
+  whatsapp?: string;
+}
+
+/** Arbitrary user-defined key/value pairs stored as jsonb. */
+export type CustomFields = Record<string, string>;
 
 /** Clearance / sensitivity levels. 5 = highest (sees everything), 1 = lowest. */
 export type Level = 1 | 2 | 3 | 4 | 5;
@@ -50,6 +77,27 @@ export interface Category {
   updated_at: string;
 }
 
+export interface Account {
+  id: string;
+  org_id: string;
+  name: string;
+  website: string | null;
+  industry: string | null;
+  phone: string | null;
+  email: string | null;
+  locality: string | null;
+  address: string | null;
+  size: string | null;
+  annual_revenue: number | null;
+  notes: string | null;
+  tags: string[];
+  custom_fields: CustomFields;
+  min_level: number;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Contact {
   id: string;
   org_id: string;
@@ -60,6 +108,11 @@ export interface Contact {
   locality: string | null;
   address: string | null;
   notes: string | null;
+  account_id: string | null;
+  title: string | null;
+  tags: string[];
+  social: SocialLinks;
+  custom_fields: CustomFields;
   min_level: number;
   created_by: string | null;
   created_at: string;
@@ -109,6 +162,30 @@ export interface Deal {
   notes: string | null;
   min_level: number;
   shared_with: string[];
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Lead {
+  id: string;
+  org_id: string;
+  name: string;
+  company: string | null;
+  email: string | null;
+  phone: string | null;
+  source: LeadSource;
+  status: LeadStatus;
+  score: number;
+  est_value: number | null;
+  currency: string;
+  assignee_id: string | null;
+  contact_id: string | null;
+  account_id: string | null;
+  converted_contact_id: string | null;
+  converted_at: string | null;
+  notes: string | null;
+  min_level: number;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -180,10 +257,20 @@ export interface Database {
         Insert: Insert<Category, "org_id" | "name">;
         Update: Update<Category>;
       };
+      accounts: {
+        Row: Account;
+        Insert: Insert<Account, "org_id" | "name">;
+        Update: Update<Account>;
+      };
       contacts: {
         Row: Contact;
         Insert: Insert<Contact, "org_id" | "name">;
         Update: Update<Contact>;
+      };
+      leads: {
+        Row: Lead;
+        Insert: Insert<Lead, "org_id" | "name">;
+        Update: Update<Lead>;
       };
       interactions: {
         Row: Interaction;

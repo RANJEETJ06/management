@@ -41,3 +41,24 @@ export function assignableLevels(myLevel: number): LevelMeta[] {
 export function isRestricted(minLevel: number): boolean {
   return (minLevel ?? 1) > 1;
 }
+
+/**
+ * Minimum clearance to access a whole feature area. Doubles as the default
+ * `min_level` (the "floor") for that feature's records, so RLS hides the data
+ * from anyone below the floor. Mirrors the level annotations in the spec.
+ */
+export const FEATURE_FLOORS = {
+  leads: 5,
+  accounts: 4,
+  pipeline: 3,
+} as const satisfies Record<string, Level>;
+
+export type FeatureKey = keyof typeof FEATURE_FLOORS;
+
+export function floorFor(feature: FeatureKey): Level {
+  return FEATURE_FLOORS[feature];
+}
+
+export function canAccessFeature(myLevel: number, feature: FeatureKey): boolean {
+  return (myLevel ?? 1) >= FEATURE_FLOORS[feature];
+}

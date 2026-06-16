@@ -19,6 +19,8 @@ import {
   Columns3,
   ListChecks,
   ShieldCheck,
+  Building2,
+  Target,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { levelMeta } from "@/lib/levels";
@@ -30,12 +32,16 @@ type NavItem = {
   icon: React.ComponentType<{ className?: string }>;
   /** Hidden from plain members (deal-money views). */
   privileged?: boolean;
+  /** Minimum clearance required to see this entry (the feature's floor). */
+  minLevel?: number;
 };
 type Membership = { org_id: string; role: string; org_name: string; level: number };
 
 const baseItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/contacts", label: "Contacts", icon: Users },
+  { href: "/accounts", label: "Accounts", icon: Building2, minLevel: 4 },
+  { href: "/leads", label: "Leads", icon: Target, minLevel: 5 },
   { href: "/interactions", label: "Interactions", icon: CalendarClock },
   { href: "/pipeline", label: "Pipeline", icon: Columns3, privileged: true },
   { href: "/deals", label: "Deals", icon: Receipt, privileged: true },
@@ -59,10 +65,11 @@ export function Nav({
   pendingCount: number;
   userEmail: string;
 }) {
-  const items =
-    activeRole === "member"
-      ? baseItems.filter((i) => !i.privileged)
-      : baseItems;
+  const items = baseItems.filter(
+    (i) =>
+      (activeRole !== "member" || !i.privileged) &&
+      activeLevel >= (i.minLevel ?? 1)
+  );
   const clearance = levelMeta(activeLevel);
   const pathname = usePathname();
   const router = useRouter();

@@ -17,15 +17,21 @@ export function SensitivityField({
   value,
   onChange,
   userLevel,
+  floor = 1,
   className,
 }: {
   value: number;
   onChange: (level: number) => void;
   userLevel: number;
+  /** Lowest level this record may be tagged with (the feature's floor). */
+  floor?: number;
   className?: string;
 }) {
-  if ((userLevel ?? 1) <= 1) return null;
-  const options = assignableLevels(userLevel);
+  const cap = Math.min(5, Math.max(1, Math.round(userLevel || 1)));
+  const lo = Math.min(cap, Math.max(1, Math.round(floor || 1)));
+  // Nothing to choose when the user is at the floor (or the workspace floor).
+  if (cap <= 1 || lo >= cap) return null;
+  const options = assignableLevels(cap).filter((o) => o.level >= lo);
   const restricted = (value ?? 1) > 1;
 
   return (

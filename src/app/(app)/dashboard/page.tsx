@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate, relativeDate } from "@/lib/utils";
+import { FEATURE_FLOORS } from "@/lib/levels";
+import { OPEN_LEAD_STAGES, stageMeta } from "@/lib/leads";
 import {
   Plus,
   ArrowRight,
@@ -14,7 +16,9 @@ import {
   CalendarClock,
   Receipt,
   Wallet,
+  Target,
 } from "lucide-react";
+import type { LeadStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -28,11 +32,29 @@ type InsightDeal = {
 };
 
 export default async function DashboardPage() {
-  const { orgId, role } = await requireOrg();
+  const { orgId, role, level } = await requireOrg();
   const isMember = role === "member";
+  const isDirector = level >= FEATURE_FLOORS.leads;
   const supabase = createClient();
 
   const today = new Date().toISOString().slice(0, 10);
+
+  // Director-only lead pipeline snapshot (forecast + open count).
+  const leadRows: { status: LeadStatus; est_value: number | null }[] = isDirector
+    ? ((
+        await supabase.from("leads").select("status, est_value").eq("org_id", orgId).limit(500)
+      ).data ?? [])
+    : [];
+  let openLeadsCount = 0;
+  let weightedForecast = 0;
+  let openPipeline = 0;
+  for (const l of leadRows) {
+    if (OPEN_LEAD_STAGES.includes(l.status)) {
+      openLeadsCount += 1;
+      openPipeline += l.est_value ?? 0;
+      weightedForecast += (l.est_value ?? 0) * stageMeta(l.status).probability;
+    }
+  }
 
   const insightDeals: InsightDeal[] = isMember
     ? []
@@ -112,13 +134,54 @@ export default async function DashboardPage() {
         }
       />
 
-      <div className={`grid gap-4 ${isMember ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
+      <div
+        className={`grid gap-4 ${
+          isMember
+            ? "sm:grid-cols-2"
+            : isDirector
+              ? "sm:grid-cols-2 lg:grid-cols-4"
+              : "sm:grid-cols-3"
+        }`}
+      >
         <Stat label="Contacts" value={contactCount ?? 0} href="/contacts" icon={Users} />
         <Stat label="Interactions" value={interactionCount ?? 0} href="/interactions" icon={CalendarClock} />
         {!isMember && (
           <Stat label="Open deals" value={openDealsRes.count ?? 0} href="/deals" icon={Receipt} />
         )}
+        {isDirector && (
+          <Stat label="Open leads" value={openLeadsCount} href="/leads" icon={Target} />
+        )}
       </div>
+
+      {isDirector && leadRows.length > 0 && (
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gold-soft text-[hsl(34_72%_30%)]">
+                  <Target className="h-4 w-4" />
+                </span>
+                <div>
+                  <div className="eyebrow">Weighted pipeline forecast</div>
+                  <div className="font-display text-2xl font-semibold tracking-tight tnum">
+                    {formatCurrency(weightedForecast, "INR")}
+                  </div>
+                </div>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Open pipeline:{" "}
+                <span className="font-medium text-foreground tnum">
+                  {formatCurrency(openPipeline, "INR")}
+                </span>
+                {" · "}
+                <Link href="/leads" className="text-primary hover:underline">
+                  View leads
+                </Link>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {!isMember && insightDeals.length > 0 && <Insights deals={insightDeals} />}
 

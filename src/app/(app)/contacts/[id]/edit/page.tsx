@@ -10,19 +10,32 @@ export default async function EditContactPage({ params }: { params: { id: string
   if (role === "member") redirect(`/contacts/${params.id}`);
   const supabase = createClient();
 
-  const { data: contact } = await supabase
-    .from("contacts")
-    .select("*")
-    .eq("id", params.id)
-    .eq("org_id", orgId)
-    .maybeSingle<Contact>();
+  const [{ data: contact }, { data: accounts }] = await Promise.all([
+    supabase
+      .from("contacts")
+      .select("*")
+      .eq("id", params.id)
+      .eq("org_id", orgId)
+      .maybeSingle<Contact>(),
+    supabase
+      .from("accounts")
+      .select("id, name")
+      .eq("org_id", orgId)
+      .order("name", { ascending: true })
+      .limit(500),
+  ]);
 
   if (!contact) notFound();
 
   return (
     <div>
       <PageHeader title={`Edit ${contact.name}`} />
-      <ContactForm orgId={orgId} initial={contact} userLevel={level} />
+      <ContactForm
+        orgId={orgId}
+        initial={contact}
+        userLevel={level}
+        accounts={(accounts ?? []) as { id: string; name: string }[]}
+      />
     </div>
   );
 }

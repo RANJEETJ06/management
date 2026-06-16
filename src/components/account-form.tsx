@@ -7,32 +7,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 import { SensitivityField } from "@/components/sensitivity-field";
 import { TagInput } from "@/components/tag-input";
 import { CustomFieldsEditor } from "@/components/custom-fields-editor";
-import type { Contact, ContactType, CustomFields, SocialLinks } from "@/lib/types";
+import { FEATURE_FLOORS } from "@/lib/levels";
+import type { Account, CustomFields } from "@/lib/types";
 
-const SOCIAL_FIELDS: { key: keyof SocialLinks; label: string; placeholder: string }[] = [
-  { key: "website", label: "Website", placeholder: "https://" },
-  { key: "linkedin", label: "LinkedIn", placeholder: "linkedin.com/in/…" },
-  { key: "twitter", label: "Twitter / X", placeholder: "@handle" },
-  { key: "instagram", label: "Instagram", placeholder: "@handle" },
-  { key: "whatsapp", label: "WhatsApp", placeholder: "+91…" },
-];
-
-export function ContactForm({
+export function AccountForm({
   orgId,
   initial,
-  userLevel = 1,
-  accounts = [],
-  defaultAccountId,
+  userLevel = FEATURE_FLOORS.accounts,
 }: {
   orgId: string;
-  initial?: Contact;
+  initial?: Account;
   userLevel?: number;
-  accounts?: { id: string; name: string }[];
-  defaultAccountId?: string;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -40,18 +28,18 @@ export function ContactForm({
 
   const [form, setForm] = useState({
     name: initial?.name ?? "",
-    type: (initial?.type ?? "supplier") as ContactType,
-    title: initial?.title ?? "",
-    account_id: initial?.account_id ?? defaultAccountId ?? "",
+    website: initial?.website ?? "",
+    industry: initial?.industry ?? "",
     phone: initial?.phone ?? "",
     email: initial?.email ?? "",
     locality: initial?.locality ?? "",
     address: initial?.address ?? "",
+    size: initial?.size ?? "",
+    annual_revenue: initial?.annual_revenue != null ? String(initial.annual_revenue) : "",
     notes: initial?.notes ?? "",
-    min_level: initial?.min_level ?? 1,
+    min_level: initial?.min_level ?? FEATURE_FLOORS.accounts,
   });
   const [tags, setTags] = useState<string[]>(initial?.tags ?? []);
-  const [social, setSocial] = useState<SocialLinks>(initial?.social ?? {});
   const [customFields, setCustomFields] = useState<CustomFields>(initial?.custom_fields ?? {});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -60,40 +48,34 @@ export function ContactForm({
     e.preventDefault();
     setError("");
     setLoading(true);
-    const contactsTable = supabase.from("contacts") as any;
-
-    const cleanSocial: SocialLinks = {};
-    for (const f of SOCIAL_FIELDS) {
-      const v = (social[f.key] ?? "").trim();
-      if (v) cleanSocial[f.key] = v;
-    }
+    const accountsTable = supabase.from("accounts") as any;
 
     const payload = {
       name: form.name.trim(),
-      type: form.type,
-      title: form.title.trim() || null,
-      account_id: form.account_id || null,
+      website: form.website.trim() || null,
+      industry: form.industry.trim() || null,
       phone: form.phone.trim() || null,
       email: form.email.trim() || null,
       locality: form.locality.trim() || null,
       address: form.address.trim() || null,
+      size: form.size.trim() || null,
+      annual_revenue: form.annual_revenue ? Number(form.annual_revenue) : null,
       notes: form.notes.trim() || null,
       min_level: form.min_level,
       tags,
-      social: cleanSocial,
       custom_fields: customFields,
     };
 
     if (editing) {
-      const { error } = await contactsTable.update(payload).eq("id", initial!.id);
+      const { error } = await accountsTable.update(payload).eq("id", initial!.id);
       if (error) {
         setError(error.message);
         setLoading(false);
         return;
       }
-      router.push(`/contacts/${initial!.id}`);
+      router.push(`/accounts/${initial!.id}`);
     } else {
-      const { data, error } = await contactsTable
+      const { data, error } = await accountsTable
         .insert({ ...payload, org_id: orgId })
         .select("id")
         .single();
@@ -102,22 +84,23 @@ export function ContactForm({
         setLoading(false);
         return;
       }
-      router.push(`/contacts/${(data as { id: string }).id}`);
+      router.push(`/accounts/${(data as { id: string }).id}`);
     }
     router.refresh();
   }
 
   async function remove() {
     if (!editing) return;
-    if (!confirm("Delete this contact? Linked interactions and deals will keep their record.")) return;
+    if (!confirm("Delete this account? Linked contacts will keep their record but lose the company link."))
+      return;
     setLoading(true);
-    const { error } = await (supabase.from("contacts") as any).delete().eq("id", initial!.id);
+    const { error } = await (supabase.from("accounts") as any).delete().eq("id", initial!.id);
     if (error) {
       setError(error.message);
       setLoading(false);
       return;
     }
-    router.push("/contacts");
+    router.push("/accounts");
     router.refresh();
   }
 
@@ -125,7 +108,7 @@ export function ContactForm({
     <form onSubmit={submit} className="max-w-2xl space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1 sm:col-span-2">
-          <Label htmlFor="name">Name *</Label>
+          <Label htmlFor="name">Company name *</Label>
           <Input
             id="name"
             required
@@ -135,46 +118,24 @@ export function ContactForm({
         </div>
 
         <div className="space-y-1">
-          <Label htmlFor="type">Type</Label>
-          <Select
-            id="type"
-            value={form.type}
-            onChange={(e) => setForm({ ...form, type: e.target.value as ContactType })}
-          >
-            <option value="supplier">Supplier</option>
-            <option value="buyer">Buyer</option>
-            <option value="partner">Partner</option>
-            <option value="other">Other</option>
-          </Select>
-        </div>
-
-        <div className="space-y-1">
-          <Label htmlFor="title">Job title</Label>
+          <Label htmlFor="industry">Industry</Label>
           <Input
-            id="title"
-            placeholder="e.g. Purchasing manager"
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            id="industry"
+            placeholder="e.g. Wholesale produce"
+            value={form.industry}
+            onChange={(e) => setForm({ ...form, industry: e.target.value })}
           />
         </div>
 
-        {accounts.length > 0 && (
-          <div className="space-y-1 sm:col-span-2">
-            <Label htmlFor="account">Company / account</Label>
-            <Select
-              id="account"
-              value={form.account_id}
-              onChange={(e) => setForm({ ...form, account_id: e.target.value })}
-            >
-              <option value="">— None —</option>
-              {accounts.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-            </Select>
-          </div>
-        )}
+        <div className="space-y-1">
+          <Label htmlFor="website">Website</Label>
+          <Input
+            id="website"
+            placeholder="https://"
+            value={form.website}
+            onChange={(e) => setForm({ ...form, website: e.target.value })}
+          />
+        </div>
 
         <div className="space-y-1">
           <Label htmlFor="phone">Phone</Label>
@@ -200,13 +161,22 @@ export function ContactForm({
           <Label htmlFor="locality">Locality</Label>
           <Input
             id="locality"
-            placeholder="e.g. Azadpur, Koyambedu"
             value={form.locality}
             onChange={(e) => setForm({ ...form, locality: e.target.value })}
           />
         </div>
 
         <div className="space-y-1">
+          <Label htmlFor="size">Company size</Label>
+          <Input
+            id="size"
+            placeholder="e.g. 1-10, 200+"
+            value={form.size}
+            onChange={(e) => setForm({ ...form, size: e.target.value })}
+          />
+        </div>
+
+        <div className="space-y-1 sm:col-span-2">
           <Label htmlFor="address">Address</Label>
           <Input
             id="address"
@@ -215,23 +185,20 @@ export function ContactForm({
           />
         </div>
 
-        <div className="space-y-1 sm:col-span-2">
-          <Label>Tags</Label>
-          <TagInput value={tags} onChange={setTags} placeholder="vip, wholesale, north…" />
+        <div className="space-y-1">
+          <Label htmlFor="annual_revenue">Annual revenue</Label>
+          <Input
+            id="annual_revenue"
+            type="number"
+            step="0.01"
+            value={form.annual_revenue}
+            onChange={(e) => setForm({ ...form, annual_revenue: e.target.value })}
+          />
         </div>
 
-        <div className="space-y-2 sm:col-span-2">
-          <Label>Social profiles</Label>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {SOCIAL_FIELDS.map((f) => (
-              <Input
-                key={f.key}
-                placeholder={`${f.label} — ${f.placeholder}`}
-                value={social[f.key] ?? ""}
-                onChange={(e) => setSocial({ ...social, [f.key]: e.target.value })}
-              />
-            ))}
-          </div>
+        <div className="space-y-1 sm:col-span-2">
+          <Label>Tags</Label>
+          <TagInput value={tags} onChange={setTags} placeholder="key-account, north-region…" />
         </div>
 
         <div className="space-y-1 sm:col-span-2">
@@ -251,6 +218,7 @@ export function ContactForm({
         <SensitivityField
           className="space-y-1 sm:col-span-2"
           userLevel={userLevel}
+          floor={FEATURE_FLOORS.accounts}
           value={form.min_level}
           onChange={(min_level) => setForm({ ...form, min_level })}
         />
@@ -260,7 +228,7 @@ export function ContactForm({
 
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-          {loading ? "Saving…" : editing ? "Save changes" : "Add contact"}
+          {loading ? "Saving…" : editing ? "Save changes" : "Add account"}
         </Button>
         {editing && (
           <Button

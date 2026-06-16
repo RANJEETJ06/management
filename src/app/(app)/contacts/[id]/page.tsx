@@ -18,6 +18,9 @@ import {
   CalendarClock,
   Receipt,
   ListChecks,
+  Building2,
+  Globe,
+  Link2,
 } from "lucide-react";
 import { Contact, Deal, Interaction, Task } from "@/lib/types";
 
@@ -55,6 +58,19 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
     .maybeSingle<Contact>();
 
   if (!contact) notFound();
+
+  const account = contact.account_id
+    ? ((
+        await supabase
+          .from("accounts")
+          .select("id, name")
+          .eq("id", contact.account_id)
+          .maybeSingle()
+      ).data as { id: string; name: string } | null)
+    : null;
+
+  const socialEntries = Object.entries(contact.social ?? {}).filter(([, v]) => v);
+  const customEntries = Object.entries(contact.custom_fields ?? {});
 
   const [{ data: interactions }, dealsRes, { data: tasks }] = await Promise.all([
     supabase
@@ -136,9 +152,9 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
     <div className="space-y-6">
       <PageHeader
         title={contact.name}
-        description={`${TYPE_LABELS[contact.type]}${
-          contact.locality ? " · " + contact.locality : ""
-        }`}
+        description={[TYPE_LABELS[contact.type], contact.title, contact.locality]
+          .filter(Boolean)
+          .join(" · ")}
         action={
           <>
             {canEdit && (
@@ -164,6 +180,14 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
               <Lock className="h-3 w-3" /> Restricted · {sensitivityTag(contact.min_level)}
             </Badge>
           )}
+          {account && (
+            <div className="flex items-center gap-2 text-sm">
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+              <Link href={`/accounts/${account.id}`} className="hover:underline">
+                {account.name}
+              </Link>
+            </div>
+          )}
           {contact.phone && (
             <div className="flex items-center gap-2 text-sm">
               <Phone className="h-4 w-4 text-muted-foreground" />
@@ -185,6 +209,62 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
               <MapPin className="h-4 w-4 text-muted-foreground" />
               <span>{contact.address}</span>
             </div>
+          )}
+          {contact.tags.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1 border-t pt-2">
+              {contact.tags.map((t) => (
+                <span
+                  key={t}
+                  className="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground"
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+          )}
+          {socialEntries.length > 0 && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-2 text-sm">
+              {socialEntries.map(([k, v]) => {
+                const val = String(v);
+                const href =
+                  k === "whatsapp"
+                    ? `https://wa.me/${val.replace(/[^\d]/g, "")}`
+                    : /^https?:\/\//.test(val)
+                      ? val
+                      : k === "website" || k === "linkedin"
+                        ? `https://${val}`
+                        : null;
+                const Icon = k === "website" ? Globe : Link2;
+                return href ? (
+                  <a
+                    key={k}
+                    href={href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 capitalize text-muted-foreground hover:text-foreground hover:underline"
+                  >
+                    <Icon className="h-3.5 w-3.5" /> {k}
+                  </a>
+                ) : (
+                  <span
+                    key={k}
+                    className="inline-flex items-center gap-1 capitalize text-muted-foreground"
+                  >
+                    <Icon className="h-3.5 w-3.5" /> {k}: {val}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+          {customEntries.length > 0 && (
+            <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 border-t pt-2 text-sm">
+              {customEntries.map(([k, v]) => (
+                <div key={k} className="contents">
+                  <dt className="text-muted-foreground">{k}</dt>
+                  <dd>{v}</dd>
+                </div>
+              ))}
+            </dl>
           )}
           {contact.notes && (
             <div className="text-sm whitespace-pre-wrap pt-2 border-t mt-2">{contact.notes}</div>
