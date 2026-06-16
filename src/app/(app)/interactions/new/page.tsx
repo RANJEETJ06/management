@@ -8,7 +8,7 @@ export default async function NewInteractionPage({
 }: {
   searchParams: { contact?: string };
 }) {
-  const { orgId } = await requireOrg();
+  const { orgId, level } = await requireOrg();
   const supabase = createClient();
 
   const [{ data: contacts }, { data: categories }] = await Promise.all([
@@ -32,6 +32,7 @@ export default async function NewInteractionPage({
         contacts={contacts ?? []}
         categories={categories ?? []}
         defaultContactId={searchParams.contact}
+        userLevel={level}
       />
     </div>
   );

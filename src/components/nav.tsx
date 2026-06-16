@@ -15,23 +15,31 @@ import {
   LogOut,
   Menu,
   X,
-  NotebookPen,
+  Flower2,
+  Columns3,
+  ListChecks,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { levelMeta } from "@/lib/levels";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 
 type NavItem = {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+  /** Hidden from plain members (deal-money views). */
+  privileged?: boolean;
 };
-type Membership = { org_id: string; role: string; org_name: string };
+type Membership = { org_id: string; role: string; org_name: string; level: number };
 
 const baseItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/contacts", label: "Contacts", icon: Users },
   { href: "/interactions", label: "Interactions", icon: CalendarClock },
-  { href: "/deals", label: "Deals", icon: Receipt },
+  { href: "/pipeline", label: "Pipeline", icon: Columns3, privileged: true },
+  { href: "/deals", label: "Deals", icon: Receipt, privileged: true },
+  { href: "/tasks", label: "Tasks", icon: ListChecks },
   { href: "/categories", label: "Categories", icon: Tags },
   { href: "/team", label: "Team", icon: UserCog },
 ];
@@ -40,19 +48,22 @@ export function Nav({
   memberships,
   activeOrgId,
   activeRole,
+  activeLevel,
   pendingCount,
   userEmail,
 }: {
   memberships: Membership[];
   activeOrgId: string;
   activeRole: string;
+  activeLevel: number;
   pendingCount: number;
   userEmail: string;
 }) {
   const items =
     activeRole === "member"
-      ? baseItems.filter((i) => i.href !== "/deals")
+      ? baseItems.filter((i) => !i.privileged)
       : baseItems;
+  const clearance = levelMeta(activeLevel);
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
@@ -104,14 +115,14 @@ export function Nav({
   const Brand = () => (
     <div className="flex items-center gap-2.5 px-1 pb-4">
       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-        <NotebookPen className="h-[1.1rem] w-[1.1rem]" />
+        <Flower2 className="h-[1.15rem] w-[1.15rem]" />
       </div>
       <div className="leading-tight">
-        <div className="font-display text-[1.05rem] font-semibold tracking-tight">
-          Data Manager
+        <div className="font-display text-[1.15rem] font-semibold tracking-tight">
+          Lupin
         </div>
         <div className="text-[0.65rem] uppercase tracking-[0.16em] text-muted-foreground">
-          Business Almanac
+          Relationship Almanac
         </div>
       </div>
     </div>
@@ -127,6 +138,15 @@ export function Nav({
           <div className="eyebrow">Signed in as</div>
           <div className="text-[0.8rem] font-medium truncate">{userEmail}</div>
         </div>
+      </div>
+      <div
+        className="mx-2 mb-1 flex items-center gap-2 rounded-md border border-gold/30 bg-gold-soft/60 px-2.5 py-1.5"
+        title={`Clearance level ${clearance.level} of 5 — you can see records up to "${clearance.tag}".`}
+      >
+        <ShieldCheck className="h-3.5 w-3.5 text-[hsl(34_72%_30%)] dark:text-gold" />
+        <span className="text-[0.7rem] font-semibold text-[hsl(34_72%_30%)] dark:text-gold">
+          L{clearance.level} · {clearance.name}
+        </span>
       </div>
       <button
         onClick={signOut}
@@ -146,7 +166,7 @@ export function Nav({
       <header className="md:hidden sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border/70 bg-surface/90 px-4 py-3 backdrop-blur-md">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <NotebookPen className="h-4 w-4" />
+            <Flower2 className="h-4 w-4" />
           </div>
           <div className="min-w-0">
             <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Workspace</div>

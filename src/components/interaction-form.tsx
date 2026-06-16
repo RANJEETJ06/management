@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { SensitivityField } from "@/components/sensitivity-field";
 import { Trash2, Plus } from "lucide-react";
 import type {
   Channel,
@@ -44,6 +45,7 @@ export function InteractionForm({
   initial,
   initialItems,
   defaultContactId,
+  userLevel = 1,
 }: {
   orgId: string;
   contacts: Pick<Contact, "id" | "name" | "type">[];
@@ -51,6 +53,7 @@ export function InteractionForm({
   initial?: Interaction;
   initialItems?: InteractionItem[];
   defaultContactId?: string;
+  userLevel?: number;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -64,6 +67,7 @@ export function InteractionForm({
     summary: initial?.summary ?? "",
     follow_up_on: initial?.follow_up_on ?? "",
     status: (initial?.status ?? "open") as InteractionStatus,
+    min_level: initial?.min_level ?? 1,
   });
 
   const [items, setItems] = useState<LineItem[]>(
@@ -108,6 +112,7 @@ export function InteractionForm({
       summary: form.summary.trim(),
       follow_up_on: form.follow_up_on || null,
       status: form.status,
+      min_level: form.min_level,
     };
 
     let interactionId: string;
@@ -264,6 +269,13 @@ export function InteractionForm({
             <option value="dropped">Dropped</option>
           </Select>
         </div>
+
+        <SensitivityField
+          className="space-y-1 sm:col-span-2"
+          userLevel={userLevel}
+          value={form.min_level}
+          onChange={(min_level) => setForm({ ...form, min_level })}
+        />
       </div>
 
       <div className="space-y-3">

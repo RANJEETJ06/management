@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/page-header";
 import { InteractionForm } from "@/components/interaction-form";
 
 export default async function EditInteractionPage({ params }: { params: { id: string } }) {
-  const { orgId, role } = await requireOrg();
+  const { orgId, role, level } = await requireOrg();
   if (role === "member") redirect(`/interactions/${params.id}`);
   const supabase = createClient();
 
@@ -27,6 +27,7 @@ export default async function EditInteractionPage({ params }: { params: { id: st
         categories={categories ?? []}
         initial={row}
         initialItems={items ?? []}
+        userLevel={level}
       />
     </div>
   );

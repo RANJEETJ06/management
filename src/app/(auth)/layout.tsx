@@ -1,4 +1,4 @@
-import { NotebookPen, Users, CalendarClock, Receipt } from "lucide-react";
+import { Flower2, Users, CalendarClock, Receipt, ShieldCheck } from "lucide-react";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -16,12 +16,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         />
         <div className="relative flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-foreground/15 ring-1 ring-primary-foreground/20 backdrop-blur">
-            <NotebookPen className="h-5 w-5" />
+            <Flower2 className="h-5 w-5" />
           </div>
           <div className="leading-tight">
-            <div className="font-display text-lg font-semibold tracking-tight">Data Manager</div>
+            <div className="font-display text-xl font-semibold tracking-tight">Lupin</div>
             <div className="text-[0.65rem] uppercase tracking-[0.18em] text-primary-foreground/70">
-              Business Almanac
+              Relationship Almanac
             </div>
           </div>
         </div>
@@ -35,11 +35,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <Feature icon={Users} text="Suppliers, buyers & partners in one tidy place" />
             <Feature icon={CalendarClock} text="Log interactions and never miss a follow-up" />
             <Feature icon={Receipt} text="Track deals from first call to close" />
+            <Feature icon={ShieldCheck} text="Five-tier clearance — the right eyes on the right data" />
           </ul>
         </div>
 
         <div className="relative text-xs text-primary-foreground/60">
-          © {new Date().getFullYear()} Data Manager · Your business diary in the cloud
+          © {new Date().getFullYear()} Lupin · A calmer CRM for real businesses
         </div>
       </aside>
 

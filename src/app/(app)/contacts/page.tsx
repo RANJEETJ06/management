@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Phone, MapPin, Download } from "lucide-react";
+import { Plus, Phone, MapPin, Download, Lock } from "lucide-react";
 import type { Contact, ContactType } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -119,7 +119,12 @@ export default async function ContactsPage({
               <Card className="transition-shadow hover:shadow-md h-full">
                 <CardContent className="p-4 space-y-2">
                   <div className="flex items-start justify-between gap-2">
-                    <div className="font-medium truncate">{c.name}</div>
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      {c.min_level > 1 && (
+                        <Lock className="h-3.5 w-3.5 shrink-0 text-gold" aria-label="Restricted" />
+                      )}
+                      <span className="font-medium truncate">{c.name}</span>
+                    </div>
                     <Badge variant="secondary">{TYPE_LABELS[c.type]}</Badge>
                   </div>
                   {c.phone && (

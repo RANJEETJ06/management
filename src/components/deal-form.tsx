@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { SensitivityField } from "@/components/sensitivity-field";
+import { ShareWithField, type ShareMember } from "@/components/share-with-field";
 import { Trash2, Plus } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import type {
@@ -45,12 +47,16 @@ export function DealForm({
   categories,
   initial,
   initialItems,
+  userLevel = 1,
+  members = [],
 }: {
   orgId: string;
   contacts: Pick<Contact, "id" | "name" | "type">[];
   categories: Pick<Category, "id" | "name">[];
   initial?: Deal;
   initialItems?: DealItem[];
+  userLevel?: number;
+  members?: ShareMember[];
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -66,7 +72,9 @@ export function DealForm({
     amount_paid: initial?.amount_paid != null ? String(initial.amount_paid) : "0",
     currency: initial?.currency ?? "INR",
     notes: initial?.notes ?? "",
+    min_level: initial?.min_level ?? 1,
   });
+  const [sharedWith, setSharedWith] = useState<string[]>(initial?.shared_with ?? []);
 
   const [lines, setLines] = useState<Line[]>(
     initialItems && initialItems.length > 0
@@ -130,6 +138,8 @@ export function DealForm({
       amount_paid: Number(form.amount_paid || 0),
       currency: form.currency,
       notes: form.notes.trim() || null,
+      min_level: form.min_level,
+      shared_with: form.min_level > 1 ? sharedWith : [],
     };
 
     let dealId: string;
@@ -292,6 +302,21 @@ export function DealForm({
             onChange={(e) => setForm({ ...form, notes: e.target.value })}
           />
         </div>
+
+        <SensitivityField
+          className="space-y-1 sm:col-span-2"
+          userLevel={userLevel}
+          value={form.min_level}
+          onChange={(min_level) => setForm({ ...form, min_level })}
+        />
+
+        <ShareWithField
+          className="space-y-1 sm:col-span-2"
+          members={members}
+          value={sharedWith}
+          onChange={setSharedWith}
+          minLevel={form.min_level}
+        />
       </div>
 
       <div className="space-y-3">

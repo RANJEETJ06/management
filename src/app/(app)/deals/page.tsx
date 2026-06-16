@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { Plus, Download } from "lucide-react";
+import { Plus, Download, Lock } from "lucide-react";
 import type { DealStatus, PaymentStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +39,7 @@ export default async function DealsPage({
   let query = supabase
     .from("deals")
     .select(
-      "id, deal_date, direction, status, payment_status, amount_total, amount_paid, currency, contact_id, contacts(name)"
+      "id, deal_date, direction, status, payment_status, amount_total, amount_paid, currency, min_level, contact_id, contacts(name)"
     )
     .eq("org_id", orgId)
     .order("deal_date", { ascending: false })
@@ -122,9 +122,14 @@ export default async function DealsPage({
               <Card className="transition-shadow hover:shadow-md">
                 <CardContent className="p-4 flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="font-medium truncate">
-                      {d.direction === "buy" ? "Buying from " : "Selling to "}
-                      {d.contacts?.name || "(no contact)"}
+                    <div className="font-medium truncate flex items-center gap-1.5">
+                      {d.min_level > 1 && (
+                        <Lock className="h-3.5 w-3.5 shrink-0 text-gold" aria-label="Restricted" />
+                      )}
+                      <span className="truncate">
+                        {d.direction === "buy" ? "Buying from " : "Selling to "}
+                        {d.contacts?.name || "(no contact)"}
+                      </span>
                     </div>
                     <div className="text-xs text-muted-foreground">{formatDate(d.deal_date)}</div>
                   </div>

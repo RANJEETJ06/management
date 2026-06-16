@@ -5,7 +5,12 @@ import { createClient } from "@/lib/supabase/server";
 const ACTIVE_ORG_COOKIE = "active_org_id";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
 
-export type Membership = { org_id: string; role: string; org_name: string };
+export type Membership = {
+  org_id: string;
+  role: string;
+  org_name: string;
+  level: number;
+};
 
 /**
  * Resolve the active workspace for the current user.
@@ -20,13 +25,14 @@ export type Membership = { org_id: string; role: string; org_name: string };
 export async function resolveActiveOrg(userId: string): Promise<{
   activeOrgId: string | null;
   activeRole: string | null;
+  activeLevel: number | null;
   memberships: Membership[];
 }> {
   const supabase = createClient();
 
   const { data: rows } = await supabase
     .from("members")
-    .select("org_id, role, organizations(name)")
+    .select("org_id, role, level, organizations(name)")
     .eq("user_id", userId)
     .order("created_at", { ascending: true });
 
@@ -34,10 +40,11 @@ export async function resolveActiveOrg(userId: string): Promise<{
     org_id: r.org_id,
     role: r.role,
     org_name: r.organizations?.name ?? "Workspace",
+    level: r.level ?? 1,
   }));
 
   if (memberships.length === 0) {
-    return { activeOrgId: null, activeRole: null, memberships };
+    return { activeOrgId: null, activeRole: null, activeLevel: null, memberships };
   }
 
   const cookieOrg = cookies().get(ACTIVE_ORG_COOKIE)?.value;
@@ -47,6 +54,7 @@ export async function resolveActiveOrg(userId: string): Promise<{
   return {
     activeOrgId: chosen.org_id,
     activeRole: chosen.role,
+    activeLevel: chosen.level,
     memberships,
   };
 }

@@ -5,10 +5,27 @@ import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatDate, relativeDate } from "@/lib/utils";
-import { Plus, ArrowRight, ArrowUpRight, Users, CalendarClock, Receipt } from "lucide-react";
+import { formatCurrency, formatDate, relativeDate } from "@/lib/utils";
+import {
+  Plus,
+  ArrowRight,
+  ArrowUpRight,
+  Users,
+  CalendarClock,
+  Receipt,
+  Wallet,
+} from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+type InsightDeal = {
+  deal_date: string;
+  direction: "buy" | "sell";
+  status: string;
+  amount_total: number | null;
+  amount_paid: number;
+  currency: string;
+};
 
 export default async function DashboardPage() {
   const { orgId, role } = await requireOrg();
@@ -17,7 +34,34 @@ export default async function DashboardPage() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const [{ count: contactCount }, { count: interactionCount }, openDealsRes, recent, followUps] =
+  const insightDeals: InsightDeal[] = isMember
+    ? []
+    : (
+        (
+          await supabase
+            .from("deals")
+            .select("deal_date, direction, status, amount_total, amount_paid, currency")
+            .eq("org_id", orgId)
+            .order("deal_date", { ascending: false })
+            .limit(500)
+        ).data ?? []
+      ).map((d: any) => ({
+        deal_date: d.deal_date,
+        direction: d.direction,
+        status: d.status,
+        amount_total: d.amount_total,
+        amount_paid: d.amount_paid ?? 0,
+        currency: d.currency ?? "INR",
+      }));
+
+  const [
+    { count: contactCount },
+    { count: interactionCount },
+    openDealsRes,
+    recent,
+    followUps,
+    dueTasks,
+  ] =
     await Promise.all([
       supabase.from("contacts").select("id", { count: "exact", head: true }).eq("org_id", orgId),
       supabase.from("interactions").select("id", { count: "exact", head: true }).eq("org_id", orgId),
@@ -43,6 +87,15 @@ export default async function DashboardPage() {
         .lte("follow_up_on", new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10))
         .order("follow_up_on", { ascending: true })
         .limit(5),
+      supabase
+        .from("tasks")
+        .select("id, title, due_on, priority, contact_id, contacts(name)")
+        .eq("org_id", orgId)
+        .eq("status", "open")
+        .not("due_on", "is", null)
+        .lte("due_on", new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10))
+        .order("due_on", { ascending: true })
+        .limit(6),
     ]);
 
   return (
@@ -66,6 +119,8 @@ export default async function DashboardPage() {
           <Stat label="Open deals" value={openDealsRes.count ?? 0} href="/deals" icon={Receipt} />
         )}
       </div>
+
+      {!isMember && insightDeals.length > 0 && <Insights deals={insightDeals} />}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
@@ -135,6 +190,169 @@ export default async function DashboardPage() {
                 );
               })
             )}
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle className="text-base">Tasks due soon</CardTitle>
+            <Link
+              href="/tasks"
+              className="text-sm text-primary inline-flex items-center gap-1 hover:underline"
+            >
+              All tasks <ArrowRight className="h-3 w-3" />
+            </Link>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {(dueTasks.data?.length ?? 0) === 0 ? (
+              <p className="text-sm text-muted-foreground">No tasks due in the next 7 days.</p>
+            ) : (
+              dueTasks.data!.map((t: any) => {
+                const overdue = t.due_on < today;
+                return (
+                  <Link
+                    key={t.id}
+                    href="/tasks"
+                    className="flex items-center justify-between gap-3 rounded-md p-2.5 hover:bg-accent/40 transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium truncate">{t.title}</div>
+                      {t.contacts?.name && (
+                        <div className="text-xs text-muted-foreground truncate">
+                          {t.contacts.name}
+                        </div>
+                      )}
+                    </div>
+                    <Badge variant={overdue ? "danger" : "warn"}>
+                      {formatDate(t.due_on, "PP")}
+                    </Badge>
+                  </Link>
+                );
+              })
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function Insights({ deals }: { deals: InsightDeal[] }) {
+  const currency = deals[0]?.currency ?? "INR";
+
+  // Last 6 month buckets.
+  const now = new Date();
+  const months: { key: string; label: string; sell: number; buy: number }[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({
+      key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+      label: d.toLocaleString("en", { month: "short" }),
+      sell: 0,
+      buy: 0,
+    });
+  }
+  const monthIndex = new Map(months.map((m, i) => [m.key, i]));
+
+  const stageSums: Record<string, number> = {};
+  let outstanding = 0;
+  for (const d of deals) {
+    const total = d.amount_total ?? 0;
+    const mk = d.deal_date.slice(0, 7);
+    const mi = monthIndex.get(mk);
+    if (mi != null) months[mi][d.direction] += total;
+    stageSums[d.status] = (stageSums[d.status] ?? 0) + total;
+    if (d.status !== "cancelled") outstanding += Math.max(0, total - (d.amount_paid ?? 0));
+  }
+
+  const maxMonth = Math.max(1, ...months.flatMap((m) => [m.sell, m.buy]));
+  const stages = ["pending", "confirmed", "delivered", "paid"];
+  const maxStage = Math.max(1, ...stages.map((s) => stageSums[s] ?? 0));
+  const sellTotal = months.reduce((s, m) => s + m.sell, 0);
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-3">
+      <Card className="lg:col-span-2">
+        <CardHeader className="flex-row items-center justify-between">
+          <CardTitle className="text-base">Sales vs purchases · last 6 months</CardTitle>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-sm bg-primary" /> Sales
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-sm bg-gold" /> Purchases
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex h-44 items-end justify-between gap-2">
+            {months.map((m) => (
+              <div key={m.key} className="flex flex-1 flex-col items-center gap-2">
+                <div className="flex h-36 w-full items-end justify-center gap-1">
+                  <div
+                    className="w-1/2 max-w-[1.4rem] rounded-t bg-primary transition-all"
+                    style={{ height: `${(m.sell / maxMonth) * 100}%` }}
+                    title={formatCurrency(m.sell, currency)}
+                  />
+                  <div
+                    className="w-1/2 max-w-[1.4rem] rounded-t bg-gold transition-all"
+                    style={{ height: `${(m.buy / maxMonth) * 100}%` }}
+                    title={formatCurrency(m.buy, currency)}
+                  />
+                </div>
+                <div className="text-[0.7rem] text-muted-foreground">{m.label}</div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
+              <div className="eyebrow">Outstanding</div>
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gold-soft text-[hsl(34_72%_30%)]">
+                <Wallet className="h-4 w-4" />
+              </span>
+            </div>
+            <div className="mt-2 font-display text-3xl font-semibold tnum tracking-tight">
+              {formatCurrency(outstanding, currency)}
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Unpaid balance across active deals.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Pipeline value by stage</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2.5">
+            {stages.map((s) => {
+              const v = stageSums[s] ?? 0;
+              return (
+                <div key={s}>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="capitalize text-muted-foreground">{s}</span>
+                    <span className="tnum font-medium">{formatCurrency(v, currency)}</span>
+                  </div>
+                  <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-primary/80"
+                      style={{ width: `${(v / maxStage) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+            <div className="pt-1 text-xs text-muted-foreground">
+              6-month sales total:{" "}
+              <span className="font-medium text-foreground tnum">
+                {formatCurrency(sellTotal, currency)}
+              </span>
+            </div>
           </CardContent>
         </Card>
       </div>

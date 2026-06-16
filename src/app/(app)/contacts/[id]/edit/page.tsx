@@ -6,7 +6,7 @@ import { ContactForm } from "@/components/contact-form";
 import { Contact } from "@/lib/types";
 
 export default async function EditContactPage({ params }: { params: { id: string } }) {
-  const { orgId, role } = await requireOrg();
+  const { orgId, role, level } = await requireOrg();
   if (role === "member") redirect(`/contacts/${params.id}`);
   const supabase = createClient();
 
@@ -22,7 +22,7 @@ export default async function EditContactPage({ params }: { params: { id: string
   return (
     <div>
       <PageHeader title={`Edit ${contact.name}`} />
-      <ContactForm orgId={orgId} initial={contact} />
+      <ContactForm orgId={orgId} initial={contact} userLevel={level} />
     </div>
   );
 }

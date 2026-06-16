@@ -15,6 +15,7 @@ export async function requireOrg(): Promise<{
   user: { id: string; email: string | null };
   orgId: string;
   role: string;
+  level: number;
   memberships: Membership[];
 }> {
   const supabase = createClient();
@@ -24,7 +25,8 @@ export async function requireOrg(): Promise<{
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { activeOrgId, activeRole, memberships } = await resolveActiveOrg(user.id);
+  const { activeOrgId, activeRole, activeLevel, memberships } =
+    await resolveActiveOrg(user.id);
 
   if (!activeOrgId) {
     // No memberships — see if a pending invitation is waiting for them.
@@ -37,6 +39,7 @@ export async function requireOrg(): Promise<{
     user: { id: user.id, email: user.email ?? null },
     orgId: activeOrgId,
     role: activeRole ?? "member",
+    level: activeLevel ?? 1,
     memberships,
   };
 }

@@ -18,8 +18,9 @@ const sans = Hanken_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Data Manager — your business almanac",
-  description: "Your business diary in the cloud — contacts, conversations, deals.",
+  title: "Lupin — a calmer CRM",
+  description:
+    "Lupin is a relationship almanac for real businesses — contacts, conversations, deals, tasks, and tiered access from the field to the boardroom.",
 };
 
 export const viewport: Viewport = {

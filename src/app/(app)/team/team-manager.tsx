@@ -8,10 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Copy, Check, LogOut } from "lucide-react";
+import { Trash2, Copy, Check, LogOut, ShieldCheck } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { LEVELS, levelMeta } from "@/lib/levels";
 
-type Member = { user_id: string; role: string; created_at: string };
+type Member = { user_id: string; role: string; level: number; created_at: string };
 type Invitation = {
   id: string;
   email: string;
@@ -99,6 +100,19 @@ export function TeamManager({
   async function revoke(id: string) {
     if (!confirm("Revoke this invitation?")) return;
     const { error } = await supabase.from("invitations").delete().eq("id", id);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    router.refresh();
+  }
+
+  async function changeLevel(userId: string, level: number) {
+    setError("");
+    const { error } = await (supabase.from("members") as any)
+      .update({ level })
+      .eq("org_id", orgId)
+      .eq("user_id", userId);
     if (error) {
       setError(error.message);
       return;
@@ -218,20 +232,48 @@ export function TeamManager({
 
       <section className="space-y-2">
         <h2 className="text-lg font-semibold">Members ({members.length})</h2>
+        <p className="text-xs text-muted-foreground">
+          <ShieldCheck className="mr-1 inline h-3.5 w-3.5 text-gold align-text-bottom" />
+          Clearance decides who sees sensitive records. <strong>Level 5</strong> (Director)
+          sees everything; <strong>Level 1</strong> sees only records marked “open to all”.
+        </p>
         <div className="rounded-md border bg-card divide-y">
           {members.map((m) => {
             const isSelf = m.user_id === currentUserId;
             const isOwner = m.role === "owner";
             const canRemove = canManage && !isSelf && !isOwner;
             const canLeave = isSelf && !isOwner;
+            const canSetLevel = canManage && !isOwner;
+            const meta = levelMeta(m.level);
             return (
-              <div key={m.user_id} className="px-4 py-2 flex items-center justify-between text-sm gap-2">
-                <span className="font-mono text-xs text-muted-foreground truncate">
+              <div key={m.user_id} className="px-4 py-2.5 flex flex-wrap items-center justify-between text-sm gap-2">
+                <span className="font-mono text-xs text-muted-foreground truncate min-w-0">
                   {m.user_id}
                   {isSelf && <span className="ml-2 not-italic text-foreground/60">(you)</span>}
                 </span>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary">{m.role}</Badge>
+                  {canSetLevel ? (
+                    <Select
+                      value={String(m.level)}
+                      onChange={(e) => changeLevel(m.user_id, Number(e.target.value))}
+                      className="h-8 w-[8.5rem] text-xs"
+                      title="Set clearance level"
+                    >
+                      {LEVELS.map((l) => (
+                        <option key={l.level} value={l.level}>
+                          L{l.level} · {l.name}
+                        </option>
+                      ))}
+                    </Select>
+                  ) : (
+                    <Badge
+                      variant="warn"
+                      title={isOwner ? "Owners always hold top clearance" : undefined}
+                    >
+                      L{meta.level} · {meta.name}
+                    </Badge>
+                  )}
                   {canRemove && (
                     <Button
                       variant="ghost"

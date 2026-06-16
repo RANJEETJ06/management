@@ -8,14 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { SensitivityField } from "@/components/sensitivity-field";
 import type { Contact, ContactType } from "@/lib/types";
 
 export function ContactForm({
   orgId,
   initial,
+  userLevel = 1,
 }: {
   orgId: string;
   initial?: Contact;
+  userLevel?: number;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -29,6 +32,7 @@ export function ContactForm({
     locality: initial?.locality ?? "",
     address: initial?.address ?? "",
     notes: initial?.notes ?? "",
+    min_level: initial?.min_level ?? 1,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -161,6 +165,13 @@ export function ContactForm({
             onChange={(e) => setForm({ ...form, notes: e.target.value })}
           />
         </div>
+
+        <SensitivityField
+          className="space-y-1 sm:col-span-2"
+          userLevel={userLevel}
+          value={form.min_level}
+          onChange={(min_level) => setForm({ ...form, min_level })}
+        />
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}

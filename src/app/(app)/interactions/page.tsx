@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDate, relativeDate } from "@/lib/utils";
-import { Plus, Download } from "lucide-react";
+import { Plus, Download, Lock } from "lucide-react";
 import type { InteractionStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +29,7 @@ export default async function InteractionsPage({
 
   let query = supabase
     .from("interactions")
-    .select("id, occurred_on, summary, location, status, follow_up_on, contact_id, contacts(name, locality)")
+    .select("id, occurred_on, summary, location, status, follow_up_on, min_level, contact_id, contacts(name, locality)")
     .eq("org_id", orgId)
     .order("occurred_on", { ascending: false })
     .limit(200);
@@ -128,11 +128,16 @@ export default async function InteractionsPage({
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="font-medium truncate">
-                        {row.contacts?.name || "(no contact)"}
-                        {row.contacts?.locality && (
-                          <span className="text-muted-foreground font-normal"> · {row.contacts.locality}</span>
+                      <div className="font-medium truncate flex items-center gap-1.5">
+                        {row.min_level > 1 && (
+                          <Lock className="h-3.5 w-3.5 shrink-0 text-gold" aria-label="Restricted" />
                         )}
+                        <span className="truncate">
+                          {row.contacts?.name || "(no contact)"}
+                          {row.contacts?.locality && (
+                            <span className="text-muted-foreground font-normal"> · {row.contacts.locality}</span>
+                          )}
+                        </span>
                       </div>
                       <div className="text-sm text-muted-foreground line-clamp-2 mt-1">{row.summary}</div>
                       {row.location && (

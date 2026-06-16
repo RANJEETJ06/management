@@ -9,6 +9,11 @@ export type DealDirection = "buy" | "sell";
 export type DealStatus = "pending" | "confirmed" | "delivered" | "paid" | "cancelled";
 export type PaymentStatus = "unpaid" | "partial" | "paid";
 export type MemberRole = "owner" | "admin" | "member";
+export type TaskStatus = "open" | "done";
+export type TaskPriority = "low" | "normal" | "high";
+
+/** Clearance / sensitivity levels. 5 = highest (sees everything), 1 = lowest. */
+export type Level = 1 | 2 | 3 | 4 | 5;
 
 export interface Organization {
   id: string;
@@ -22,6 +27,7 @@ export interface Member {
   org_id: string;
   user_id: string;
   role: MemberRole;
+  level: number;
   created_at: string;
 }
 
@@ -54,6 +60,7 @@ export interface Contact {
   locality: string | null;
   address: string | null;
   notes: string | null;
+  min_level: number;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -69,6 +76,7 @@ export interface Interaction {
   summary: string;
   follow_up_on: string | null;
   status: InteractionStatus;
+  min_level: number;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -99,6 +107,26 @@ export interface Deal {
   amount_paid: number;
   currency: string;
   notes: string | null;
+  min_level: number;
+  shared_with: string[];
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Task {
+  id: string;
+  org_id: string;
+  title: string;
+  notes: string | null;
+  due_on: string | null;
+  status: TaskStatus;
+  priority: TaskPriority;
+  contact_id: string | null;
+  deal_id: string | null;
+  assignee_id: string | null;
+  min_level: number;
+  shared_with: string[];
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -177,10 +205,16 @@ export interface Database {
         Insert: Insert<DealItem, "deal_id" | "item_name" | "quantity" | "price_per_unit">;
         Update: Update<DealItem>;
       };
+      tasks: {
+        Row: Task;
+        Insert: Insert<Task, "org_id" | "title">;
+        Update: Update<Task>;
+      };
     };
     Views: Record<string, never>;
     Functions: {
       current_org_id: { Args: Record<string, never>; Returns: string | null };
+      current_level: { Args: { target_org: string }; Returns: number };
       is_member_of: { Args: { target_org: string }; Returns: boolean };
       create_workspace: { Args: { workspace_name: string }; Returns: string };
       my_pending_invitations: {

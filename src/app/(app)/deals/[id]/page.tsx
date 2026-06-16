@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { Pencil } from "lucide-react";
+import { sensitivityTag } from "@/lib/levels";
+import { listOrgMembers } from "@/lib/members";
+import { Pencil, Lock, Users } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +32,14 @@ export default async function DealDetailPage({ params }: { params: { id: string 
   if (!row) notFound();
   const r = row as any;
 
+  const sharedIds: string[] = r.shared_with ?? [];
+  let sharedLabels: string[] = [];
+  if (r.min_level > 1 && sharedIds.length > 0) {
+    const members = await listOrgMembers(orgId);
+    const byId = new Map(members.map((m) => [m.user_id, m.email]));
+    sharedLabels = sharedIds.map((id) => byId.get(id) ?? `${id.slice(0, 8)}…`);
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -49,12 +59,26 @@ export default async function DealDetailPage({ params }: { params: { id: string 
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <Badge>{r.status}</Badge>
             <Badge variant="secondary">{r.payment_status}</Badge>
+            {r.min_level > 1 && (
+              <Badge variant="warn" className="gap-1">
+                <Lock className="h-3 w-3" /> {sensitivityTag(r.min_level)}
+              </Badge>
+            )}
             {r.delivery_on && (
               <span className="text-muted-foreground">
                 Delivery: {formatDate(r.delivery_on)}
               </span>
             )}
           </div>
+          {sharedLabels.length > 0 && (
+            <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+              <Users className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+              <span>
+                Also visible to:{" "}
+                <span className="text-foreground">{sharedLabels.join(", ")}</span>
+              </span>
+            </div>
+          )}
           {r.contacts && (
             <div className="text-sm">
               <Link className="font-medium hover:underline" href={`/contacts/${r.contacts.id}`}>

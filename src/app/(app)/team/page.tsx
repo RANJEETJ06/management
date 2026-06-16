@@ -16,7 +16,7 @@ export default async function TeamPage() {
   const [{ data: members }, { data: invitations }] = await Promise.all([
     supabase
       .from("members")
-      .select("user_id, role, created_at")
+      .select("user_id, role, level, created_at")
       .eq("org_id", orgId)
       .order("created_at", { ascending: true }),
     supabase
