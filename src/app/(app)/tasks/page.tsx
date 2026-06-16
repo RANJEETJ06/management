@@ -14,7 +14,7 @@ export default async function TasksPage() {
     supabase
       .from("tasks")
       .select(
-        "id, title, notes, due_on, status, priority, contact_id, min_level, shared_with, contacts(name)"
+        "id, title, notes, due_on, status, priority, type, remind_at, contact_id, min_level, shared_with, contacts(name)"
       )
       .eq("org_id", orgId)
       .order("due_on", { ascending: true, nullsFirst: false })
@@ -30,6 +30,8 @@ export default async function TasksPage() {
     due_on: t.due_on,
     status: t.status,
     priority: t.priority,
+    type: t.type ?? "task",
+    remind_at: t.remind_at ?? null,
     contact_id: t.contact_id,
     min_level: t.min_level ?? 1,
     shared_with: t.shared_with ?? [],
@@ -41,8 +43,8 @@ export default async function TasksPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Tasks"
-        description="Reminders and to-dos — tie them to a contact and they surface on the dashboard near their due date."
+        title="Tasks & activities"
+        description="Tasks, calls, meetings, follow-ups and notes — set a reminder or due date and they surface on the dashboard and calendar."
       />
       <TasksManager
         orgId={orgId}

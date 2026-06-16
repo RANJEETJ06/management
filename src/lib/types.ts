@@ -11,6 +11,9 @@ export type PaymentStatus = "unpaid" | "partial" | "paid";
 export type MemberRole = "owner" | "admin" | "member";
 export type TaskStatus = "open" | "done";
 export type TaskPriority = "low" | "normal" | "high";
+export type ActivityType = "task" | "call" | "meeting" | "follow_up" | "note";
+export type CommChannel = "email" | "sms" | "whatsapp" | "call" | "chat" | "other";
+export type CommDirection = "inbound" | "outbound";
 export type LeadSource =
   | "web"
   | "referral"
@@ -199,11 +202,43 @@ export interface Task {
   due_on: string | null;
   status: TaskStatus;
   priority: TaskPriority;
+  type: ActivityType;
+  remind_at: string | null;
   contact_id: string | null;
   deal_id: string | null;
+  lead_id: string | null;
   assignee_id: string | null;
   min_level: number;
   shared_with: string[];
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Communication {
+  id: string;
+  org_id: string;
+  channel: CommChannel;
+  direction: CommDirection;
+  subject: string | null;
+  body: string | null;
+  contact_id: string | null;
+  deal_id: string | null;
+  lead_id: string | null;
+  occurred_at: string;
+  min_level: number;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EmailTemplate {
+  id: string;
+  org_id: string;
+  name: string;
+  subject: string | null;
+  body: string;
+  min_level: number;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -296,6 +331,16 @@ export interface Database {
         Row: Task;
         Insert: Insert<Task, "org_id" | "title">;
         Update: Update<Task>;
+      };
+      communications: {
+        Row: Communication;
+        Insert: Insert<Communication, "org_id">;
+        Update: Update<Communication>;
+      };
+      email_templates: {
+        Row: EmailTemplate;
+        Insert: Insert<EmailTemplate, "org_id" | "name">;
+        Update: Update<EmailTemplate>;
       };
     };
     Views: Record<string, never>;

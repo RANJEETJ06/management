@@ -21,8 +21,10 @@ import {
   Building2,
   Globe,
   Link2,
+  MessagesSquare,
 } from "lucide-react";
-import { Contact, Deal, Interaction, Task } from "@/lib/types";
+import { channelLabel } from "@/lib/activities";
+import { Contact, Communication, Deal, Interaction, Task } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +36,7 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 type TimelineEntry = {
-  kind: "interaction" | "deal" | "task";
+  kind: "interaction" | "deal" | "task" | "communication";
   id: string;
   date: string;
   href: string;
@@ -72,31 +74,39 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
   const socialEntries = Object.entries(contact.social ?? {}).filter(([, v]) => v);
   const customEntries = Object.entries(contact.custom_fields ?? {});
 
-  const [{ data: interactions }, dealsRes, { data: tasks }] = await Promise.all([
-    supabase
-      .from("interactions")
-      .select("id, occurred_on, summary, location, status, min_level")
-      .eq("contact_id", params.id)
-      .order("occurred_on", { ascending: false })
-      .limit(50)
-      .returns<Interaction[]>(),
-    isMember
-      ? Promise.resolve({ data: null as Deal[] | null })
-      : supabase
-          .from("deals")
-          .select("id, deal_date, direction, status, amount_total, currency, min_level")
-          .eq("contact_id", params.id)
-          .order("deal_date", { ascending: false })
-          .limit(50)
-          .returns<Deal[]>(),
-    supabase
-      .from("tasks")
-      .select("id, title, due_on, status, created_at, min_level")
-      .eq("contact_id", params.id)
-      .order("due_on", { ascending: false })
-      .limit(50)
-      .returns<Task[]>(),
-  ]);
+  const [{ data: interactions }, dealsRes, { data: tasks }, { data: comms }] =
+    await Promise.all([
+      supabase
+        .from("interactions")
+        .select("id, occurred_on, summary, location, status, min_level")
+        .eq("contact_id", params.id)
+        .order("occurred_on", { ascending: false })
+        .limit(50)
+        .returns<Interaction[]>(),
+      isMember
+        ? Promise.resolve({ data: null as Deal[] | null })
+        : supabase
+            .from("deals")
+            .select("id, deal_date, direction, status, amount_total, currency, min_level")
+            .eq("contact_id", params.id)
+            .order("deal_date", { ascending: false })
+            .limit(50)
+            .returns<Deal[]>(),
+      supabase
+        .from("tasks")
+        .select("id, title, due_on, status, created_at, min_level")
+        .eq("contact_id", params.id)
+        .order("due_on", { ascending: false })
+        .limit(50)
+        .returns<Task[]>(),
+      supabase
+        .from("communications")
+        .select("id, channel, subject, body, occurred_at, min_level")
+        .eq("contact_id", params.id)
+        .order("occurred_at", { ascending: false })
+        .limit(50)
+        .returns<Communication[]>(),
+    ]);
   const deals = dealsRes.data;
 
   // Merge everything into one chronological story.
@@ -144,6 +154,18 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
         variant: t.status === "done" ? "success" : "warn",
       },
       restricted: t.min_level > 1,
+    });
+  }
+  for (const c of comms ?? []) {
+    timeline.push({
+      kind: "communication",
+      id: c.id,
+      date: c.occurred_at.slice(0, 10),
+      href: "/communications",
+      title: c.subject || channelLabel(c.channel),
+      detail: c.body ?? null,
+      badge: { label: channelLabel(c.channel), variant: "muted" },
+      restricted: c.min_level > 1,
     });
   }
   timeline.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
@@ -287,6 +309,8 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
                     <CalendarClock className="h-3.5 w-3.5" />
                   ) : e.kind === "deal" ? (
                     <Receipt className="h-3.5 w-3.5" />
+                  ) : e.kind === "communication" ? (
+                    <MessagesSquare className="h-3.5 w-3.5" />
                   ) : (
                     <ListChecks className="h-3.5 w-3.5" />
                   )}

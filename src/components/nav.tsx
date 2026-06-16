@@ -21,6 +21,8 @@ import {
   ShieldCheck,
   Building2,
   Target,
+  MessagesSquare,
+  CalendarDays,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { levelMeta } from "@/lib/levels";
@@ -43,9 +45,11 @@ const baseItems: NavItem[] = [
   { href: "/accounts", label: "Accounts", icon: Building2, minLevel: 4 },
   { href: "/leads", label: "Leads", icon: Target, minLevel: 5 },
   { href: "/interactions", label: "Interactions", icon: CalendarClock },
+  { href: "/communications", label: "Communications", icon: MessagesSquare, minLevel: 3 },
   { href: "/pipeline", label: "Pipeline", icon: Columns3, privileged: true },
   { href: "/deals", label: "Deals", icon: Receipt, privileged: true },
-  { href: "/tasks", label: "Tasks", icon: ListChecks },
+  { href: "/tasks", label: "Tasks & activities", icon: ListChecks },
+  { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/categories", label: "Categories", icon: Tags },
   { href: "/team", label: "Team", icon: UserCog },
 ];

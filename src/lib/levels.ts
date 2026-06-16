@@ -51,6 +51,7 @@ export const FEATURE_FLOORS = {
   leads: 5,
   accounts: 4,
   pipeline: 3,
+  communications: 3,
 } as const satisfies Record<string, Level>;
 
 export type FeatureKey = keyof typeof FEATURE_FLOORS;
