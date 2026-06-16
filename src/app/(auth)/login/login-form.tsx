@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { siteUrl } from "@/lib/utils";
+import { safeRelativePath, siteUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,9 +25,8 @@ export function LoginForm({
   const [error, setError] = useState(initialError ?? "");
   const [info, setInfo] = useState("");
 
-  const redirectTo = `${siteUrl()}/auth/callback${
-    next ? `?next=${encodeURIComponent(next)}` : ""
-  }`;
+  const safeNext = safeRelativePath(next, "/dashboard");
+  const redirectTo = `${siteUrl()}/auth/callback?next=${encodeURIComponent(safeNext)}`;
 
   async function signInWithPassword(e: React.FormEvent) {
     e.preventDefault();
@@ -43,7 +42,7 @@ export function LoginForm({
       setError(error.message);
       return;
     }
-    router.push(next || "/dashboard");
+    router.push(safeNext);
     router.refresh();
   }
 

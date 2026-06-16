@@ -1,11 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
+import { safeRelativePath } from "@/lib/utils";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
 
   const code = requestUrl.searchParams.get("code");
-  const next = requestUrl.searchParams.get("next") ?? "/dashboard";
+  // Sanitize: `next` is attacker-controllable in the link, so only allow
+  // same-site paths — never an absolute/protocol-relative URL.
+  const next = safeRelativePath(requestUrl.searchParams.get("next"), "/dashboard");
 
   if (code) {
     const supabase = createClient();

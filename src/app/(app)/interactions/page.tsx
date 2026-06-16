@@ -44,7 +44,8 @@ export default async function InteractionsPage({
     query = query.eq("status", searchParams.status);
   }
   if (searchParams.q) {
-    const q = searchParams.q.replace(/[%_]/g, "\\$&");
+    // Strip PostgREST `.or()` structural chars, then escape LIKE wildcards.
+    const q = searchParams.q.replace(/[,()]/g, " ").replace(/[%_]/g, "\\$&");
     query = query.or(`summary.ilike.%${q}%,location.ilike.%${q}%`);
   }
 

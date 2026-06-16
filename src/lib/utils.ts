@@ -27,6 +27,21 @@ export function formatCurrency(amount: number | null | undefined, currency = "IN
   }).format(amount);
 }
 
+/**
+ * Guard against open redirects: only allow same-site, absolute *paths*.
+ * Rejects absolute URLs ("https://evil.com"), protocol-relative ("//evil.com"),
+ * and backslash tricks ("/\\evil.com") — anything not a plain "/path".
+ */
+export function safeRelativePath(
+  p: string | null | undefined,
+  fallback = "/dashboard"
+) {
+  if (!p || !p.startsWith("/") || p.startsWith("//") || p.startsWith("/\\")) {
+    return fallback;
+  }
+  return p;
+}
+
 export function siteUrl() {
   // Why: on Netlify, OAuth's redirectTo lands on Supabase's Site URL fallback
   // when this is undefined/malformed. Trust the browser's origin in client

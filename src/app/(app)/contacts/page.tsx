@@ -46,7 +46,8 @@ export default async function ContactsPage({
     query = query.contains("tags", [searchParams.tag]);
   }
   if (searchParams.q) {
-    const q = searchParams.q.replace(/[%_]/g, "\\$&");
+    // Strip PostgREST `.or()` structural chars, then escape LIKE wildcards.
+    const q = searchParams.q.replace(/[,()]/g, " ").replace(/[%_]/g, "\\$&");
     query = query.or(
       `name.ilike.%${q}%,phone.ilike.%${q}%,locality.ilike.%${q}%,notes.ilike.%${q}%`
     );

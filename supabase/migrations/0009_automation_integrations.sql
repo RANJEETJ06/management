@@ -71,9 +71,12 @@ create trigger integrations_updated_at
 
 alter table public.integrations enable row level security;
 
+-- Integrations hold provider credentials, so SELECT is restricted to
+-- owners/admins (not every member). Ideally secrets live in a server-only
+-- store / Supabase Vault rather than an API-readable table.
 drop policy if exists integrations_select on public.integrations;
 create policy integrations_select on public.integrations
-  for select using (public.is_member_of(org_id));
+  for select using (public.can_edit_org(org_id));
 drop policy if exists integrations_insert on public.integrations;
 create policy integrations_insert on public.integrations
   for insert with check (public.can_edit_org(org_id));

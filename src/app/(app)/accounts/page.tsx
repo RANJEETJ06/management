@@ -30,7 +30,8 @@ export default async function AccountsPage({
     .limit(200);
 
   if (searchParams.q) {
-    const q = searchParams.q.replace(/[%_]/g, "\\$&");
+    // Strip PostgREST `.or()` structural chars, then escape LIKE wildcards.
+    const q = searchParams.q.replace(/[,()]/g, " ").replace(/[%_]/g, "\\$&");
     query = query.or(`name.ilike.%${q}%,industry.ilike.%${q}%,locality.ilike.%${q}%`);
   }
   if (searchParams.tag) query = query.contains("tags", [searchParams.tag]);

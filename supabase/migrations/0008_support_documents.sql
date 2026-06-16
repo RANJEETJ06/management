@@ -274,11 +274,15 @@ exception when others then
 end;
 $$;
 
+-- Read access must match the documents feature floor (clearance L4), otherwise
+-- any org member could list/download files via the Storage API and bypass the
+-- L4 gate that protects the documents table rows.
 drop policy if exists documents_objects_select on storage.objects;
 create policy documents_objects_select on storage.objects
   for select to authenticated using (
     bucket_id = 'documents'
     and public.is_member_of(public.doc_path_org(name))
+    and public.current_level(public.doc_path_org(name)) >= 4
   );
 drop policy if exists documents_objects_insert on storage.objects;
 create policy documents_objects_insert on storage.objects
