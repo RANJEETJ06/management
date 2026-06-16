@@ -24,10 +24,11 @@ import {
   MessagesSquare,
   FolderOpen,
   FileText,
+  LifeBuoy,
 } from "lucide-react";
 import { channelLabel } from "@/lib/activities";
-import { docTypeLabel } from "@/lib/tickets";
-import { Contact, Communication, Deal, Interaction, Task } from "@/lib/types";
+import { docTypeLabel, ticketPriorityMeta, ticketStatusMeta } from "@/lib/tickets";
+import { Contact, Communication, Deal, Interaction, Task, Ticket } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -100,7 +101,7 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
         ? Promise.resolve({ data: null as Deal[] | null })
         : supabase
             .from("deals")
-            .select("id, deal_date, direction, status, amount_total, currency, min_level")
+            .select("id, deal_date, direction, status, amount_total, amount_paid, currency, min_level")
             .eq("contact_id", params.id)
             .order("deal_date", { ascending: false })
             .limit(50)
@@ -121,6 +122,29 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
         .returns<Communication[]>(),
     ]);
   const deals = dealsRes.data;
+
+  const canTickets = level >= FEATURE_FLOORS.tickets;
+  const { data: ticketRows } = canTickets
+    ? await supabase
+        .from("tickets")
+        .select("id, subject, status, priority, sla_due_at, min_level")
+        .eq("contact_id", params.id)
+        .order("created_at", { ascending: false })
+        .limit(20)
+    : { data: null };
+  const tickets = (ticketRows ?? []) as Ticket[];
+
+  const currency360 = (deals ?? []).find((d) => d.currency)?.currency ?? "INR";
+  let lifetimeSales = 0;
+  let receivable = 0;
+  for (const d of deals ?? []) {
+    if (d.status === "cancelled" || d.direction !== "sell") continue;
+    lifetimeSales += d.amount_total ?? 0;
+    receivable += Math.max(0, (d.amount_total ?? 0) - (d.amount_paid ?? 0));
+  }
+  const openTickets = tickets.filter(
+    (t) => t.status === "open" || t.status === "pending"
+  ).length;
 
   // Merge everything into one chronological story.
   const timeline: TimelineEntry[] = [];
@@ -307,6 +331,54 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
         </CardContent>
       </Card>
 
+      {!isMember && (
+        <div className="grid gap-4 sm:grid-cols-3">
+          <MiniStat label="Lifetime sales" value={formatCurrency(lifetimeSales, currency360)} />
+          <MiniStat label="Receivable" value={formatCurrency(receivable, currency360)} />
+          {canTickets && <MiniStat label="Open tickets" value={String(openTickets)} />}
+        </div>
+      )}
+
+      {canTickets && (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-lg font-semibold">
+              <LifeBuoy className="h-4 w-4" /> Tickets
+            </h2>
+            {canEdit && (
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/tickets/new?contact=${contact.id}`}>
+                  <Plus className="h-4 w-4" /> New
+                </Link>
+              </Button>
+            )}
+          </div>
+          {tickets.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No tickets for this contact.</p>
+          ) : (
+            <div className="space-y-1.5">
+              {tickets.map((t) => (
+                <Link
+                  key={t.id}
+                  href={`/tickets/${t.id}`}
+                  className="flex items-center justify-between gap-3 rounded-md border bg-card p-3 text-sm transition-colors hover:bg-accent/40"
+                >
+                  <span className="truncate font-medium">{t.subject}</span>
+                  <span className="flex shrink-0 items-center gap-1.5">
+                    <Badge variant={ticketPriorityMeta(t.priority).variant}>
+                      {ticketPriorityMeta(t.priority).label}
+                    </Badge>
+                    <Badge variant={ticketStatusMeta(t.status).variant}>
+                      {ticketStatusMeta(t.status).label}
+                    </Badge>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
       {canDocs && (
         <section className="space-y-3">
           <div className="flex items-center justify-between">
@@ -386,5 +458,16 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
         )}
       </section>
     </div>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <Card>
+      <CardContent className="p-5">
+        <div className="eyebrow">{label}</div>
+        <div className="mt-1 font-display text-2xl font-semibold tracking-tight tnum">{value}</div>
+      </CardContent>
+    </Card>
   );
 }

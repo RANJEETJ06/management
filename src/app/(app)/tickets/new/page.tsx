@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function NewTicketPage({
   searchParams,
 }: {
-  searchParams: { contact?: string };
+  searchParams: { contact?: string; account?: string };
 }) {
   const { orgId, level } = await requireOrg();
   if (level < FEATURE_FLOORS.tickets) redirect("/dashboard");
@@ -33,6 +33,7 @@ export default async function NewTicketPage({
         contacts={(contacts ?? []) as { id: string; name: string }[]}
         accounts={(accounts ?? []) as { id: string; name: string }[]}
         defaultContactId={searchParams.contact}
+        defaultAccountId={searchParams.account}
       />
     </div>
   );

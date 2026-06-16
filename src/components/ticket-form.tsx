@@ -30,6 +30,7 @@ export function TicketForm({
   contacts,
   accounts,
   defaultContactId,
+  defaultAccountId,
 }: {
   orgId: string;
   initial?: Ticket;
@@ -38,6 +39,7 @@ export function TicketForm({
   contacts: { id: string; name: string }[];
   accounts: { id: string; name: string }[];
   defaultContactId?: string;
+  defaultAccountId?: string;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -49,7 +51,7 @@ export function TicketForm({
     status: (initial?.status ?? "open") as TicketStatus,
     priority: (initial?.priority ?? "normal") as TicketPriority,
     contact_id: initial?.contact_id ?? defaultContactId ?? "",
-    account_id: initial?.account_id ?? "",
+    account_id: initial?.account_id ?? defaultAccountId ?? "",
     assignee_id: initial?.assignee_id ?? "",
     sla_due_at: toLocalInput(initial?.sla_due_at ?? null),
     min_level: initial?.min_level ?? FEATURE_FLOORS.tickets,

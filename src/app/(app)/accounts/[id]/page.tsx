@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { FEATURE_FLOORS, sensitivityTag } from "@/lib/levels";
-import { docTypeLabel } from "@/lib/tickets";
+import { docTypeLabel, ticketPriorityMeta, ticketStatusMeta } from "@/lib/tickets";
 import {
   Pencil,
   Plus,
@@ -22,8 +22,9 @@ import {
   Briefcase,
   FolderOpen,
   FileText,
+  LifeBuoy,
 } from "lucide-react";
-import type { Account, Contact, Deal } from "@/lib/types";
+import type { Account, Contact, Deal, Ticket } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -92,6 +93,14 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
     .eq("account_id", params.id)
     .order("created_at", { ascending: false })
     .limit(20);
+
+  const { data: ticketRows } = await supabase
+    .from("tickets")
+    .select("id, subject, status, priority")
+    .eq("account_id", params.id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+  const tickets = (ticketRows ?? []) as Ticket[];
 
   return (
     <div className="space-y-6">
@@ -269,6 +278,44 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
                 <Badge variant="secondary" className="ml-auto">
                   {docTypeLabel(d.doc_type)}
                 </Badge>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-lg font-semibold">
+            <LifeBuoy className="h-4 w-4" /> Tickets
+          </h2>
+          {canEdit && (
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/tickets/new?account=${account.id}`}>
+                <Plus className="h-4 w-4" /> New
+              </Link>
+            </Button>
+          )}
+        </div>
+        {tickets.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No tickets for this account.</p>
+        ) : (
+          <div className="space-y-1.5">
+            {tickets.map((t) => (
+              <Link
+                key={t.id}
+                href={`/tickets/${t.id}`}
+                className="flex items-center justify-between gap-3 rounded-md border bg-card p-3 text-sm transition-colors hover:bg-accent/40"
+              >
+                <span className="truncate font-medium">{t.subject}</span>
+                <span className="flex shrink-0 items-center gap-1.5">
+                  <Badge variant={ticketPriorityMeta(t.priority).variant}>
+                    {ticketPriorityMeta(t.priority).label}
+                  </Badge>
+                  <Badge variant={ticketStatusMeta(t.status).variant}>
+                    {ticketStatusMeta(t.status).label}
+                  </Badge>
+                </span>
               </Link>
             ))}
           </div>

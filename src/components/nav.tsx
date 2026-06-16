@@ -25,6 +25,8 @@ import {
   CalendarDays,
   LifeBuoy,
   FolderOpen,
+  BarChart3,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { levelMeta } from "@/lib/levels";
@@ -54,8 +56,10 @@ const baseItems: NavItem[] = [
   { href: "/deals", label: "Deals", icon: Receipt, privileged: true },
   { href: "/tasks", label: "Tasks & activities", icon: ListChecks },
   { href: "/calendar", label: "Calendar", icon: CalendarDays },
+  { href: "/reports", label: "Reports", icon: BarChart3, minLevel: 3 },
   { href: "/categories", label: "Categories", icon: Tags },
   { href: "/team", label: "Team", icon: UserCog },
+  { href: "/settings", label: "Settings", icon: Settings, privileged: true },
 ];
 
 export function Nav({

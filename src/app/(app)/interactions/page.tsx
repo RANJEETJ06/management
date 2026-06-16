@@ -29,7 +29,7 @@ export default async function InteractionsPage({
 
   let query = supabase
     .from("interactions")
-    .select("id, occurred_on, summary, location, status, follow_up_on, min_level, contact_id, contacts(name, locality)")
+    .select("id, created_at, occurred_on, summary, location, status, follow_up_on, min_level, contact_id, contacts(name, locality)")
     .eq("org_id", orgId)
     .order("occurred_on", { ascending: false })
     .limit(200);
@@ -146,7 +146,7 @@ export default async function InteractionsPage({
                     </div>
                     <div className="text-right shrink-0">
                       <div className="text-sm font-medium">{formatDate(row.occurred_on)}</div>
-                      <div className="text-xs text-muted-foreground">{relativeDate(row.occurred_on)}</div>
+                      <div className="text-xs text-muted-foreground">{relativeDate(row.created_at)}</div>
                       <Badge variant={STATUS_BADGE[row.status as InteractionStatus]} className="mt-1">
                         {row.status.replace("_", " ")}
                       </Badge>

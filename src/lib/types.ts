@@ -17,6 +17,19 @@ export type CommDirection = "inbound" | "outbound";
 export type TicketStatus = "open" | "pending" | "resolved" | "closed";
 export type TicketPriority = "low" | "normal" | "high" | "urgent";
 export type DocType = "contract" | "invoice" | "quotation" | "proposal" | "other";
+export type AutomationKind =
+  | "auto_assign_leads"
+  | "followup_on_won"
+  | "followup_on_ticket_resolved"
+  | "autopay_deals";
+export type IntegrationCategory =
+  | "email"
+  | "whatsapp"
+  | "payments"
+  | "accounting"
+  | "erp"
+  | "calendar";
+export type IntegrationStatus = "connected" | "disconnected";
 export type LeadSource =
   | "web"
   | "referral"
@@ -314,6 +327,30 @@ export interface DocumentVersion {
   created_at: string;
 }
 
+export interface AutomationRule {
+  id: string;
+  org_id: string;
+  kind: AutomationKind;
+  enabled: boolean;
+  config: Record<string, string>;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Integration {
+  id: string;
+  org_id: string;
+  provider: string;
+  category: IntegrationCategory;
+  status: IntegrationStatus;
+  config: Record<string, string>;
+  connected_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface DealItem {
   id: string;
   deal_id: string;
@@ -436,6 +473,16 @@ export interface Database {
         Row: DocumentVersion;
         Insert: Insert<DocumentVersion, "document_id" | "storage_path" | "file_name">;
         Update: Update<DocumentVersion>;
+      };
+      automation_rules: {
+        Row: AutomationRule;
+        Insert: Insert<AutomationRule, "org_id" | "kind">;
+        Update: Update<AutomationRule>;
+      };
+      integrations: {
+        Row: Integration;
+        Insert: Insert<Integration, "org_id" | "provider" | "category">;
+        Update: Update<Integration>;
       };
     };
     Views: Record<string, never>;

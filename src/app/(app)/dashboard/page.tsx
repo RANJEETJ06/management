@@ -96,7 +96,7 @@ export default async function DashboardPage() {
             .in("status", ["pending", "confirmed"]),
       supabase
         .from("interactions")
-        .select("id, occurred_on, summary, contact_id, location, status, contacts(name)")
+        .select("id, created_at, summary, contact_id, location, status, contacts(name)")
         .eq("org_id", orgId)
         .order("occurred_on", { ascending: false })
         .limit(5),
@@ -205,7 +205,7 @@ export default async function DashboardPage() {
                       {row.contacts?.name || "(no contact)"}
                     </div>
                     <div className="text-xs text-muted-foreground shrink-0">
-                      {relativeDate(row.occurred_on)}
+                      {relativeDate(row.created_at)}
                     </div>
                   </div>
                   <div className="text-sm text-muted-foreground line-clamp-2">{row.summary}</div>
