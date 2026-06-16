@@ -23,6 +23,8 @@ import {
   Target,
   MessagesSquare,
   CalendarDays,
+  LifeBuoy,
+  FolderOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { levelMeta } from "@/lib/levels";
@@ -46,6 +48,8 @@ const baseItems: NavItem[] = [
   { href: "/leads", label: "Leads", icon: Target, minLevel: 5 },
   { href: "/interactions", label: "Interactions", icon: CalendarClock },
   { href: "/communications", label: "Communications", icon: MessagesSquare, minLevel: 3 },
+  { href: "/tickets", label: "Tickets", icon: LifeBuoy, minLevel: 3 },
+  { href: "/documents", label: "Documents", icon: FolderOpen, minLevel: 4 },
   { href: "/pipeline", label: "Pipeline", icon: Columns3, privileged: true },
   { href: "/deals", label: "Deals", icon: Receipt, privileged: true },
   { href: "/tasks", label: "Tasks & activities", icon: ListChecks },

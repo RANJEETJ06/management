@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { FEATURE_FLOORS, sensitivityTag } from "@/lib/levels";
+import { docTypeLabel } from "@/lib/tickets";
 import {
   Pencil,
   Plus,
@@ -19,6 +20,8 @@ import {
   Users,
   Receipt,
   Briefcase,
+  FolderOpen,
+  FileText,
 } from "lucide-react";
 import type { Account, Contact, Deal } from "@/lib/types";
 
@@ -82,6 +85,13 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
   }
 
   const customEntries = Object.entries(account.custom_fields ?? {});
+
+  const { data: docs } = await supabase
+    .from("documents")
+    .select("id, name, doc_type")
+    .eq("account_id", params.id)
+    .order("created_at", { ascending: false })
+    .limit(20);
 
   return (
     <div className="space-y-6">
@@ -227,6 +237,38 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
                     )}
                   </CardContent>
                 </Card>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-lg font-semibold">
+            <FolderOpen className="h-4 w-4" /> Documents
+          </h2>
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/documents?account=${account.id}`}>
+              <Plus className="h-4 w-4" /> Add
+            </Link>
+          </Button>
+        </div>
+        {(docs?.length ?? 0) === 0 ? (
+          <p className="text-sm text-muted-foreground">No documents linked to this account.</p>
+        ) : (
+          <div className="space-y-1.5">
+            {docs!.map((d: any) => (
+              <Link
+                key={d.id}
+                href="/documents"
+                className="flex items-center gap-2 rounded-md border bg-card p-2.5 text-sm transition-colors hover:bg-accent/40"
+              >
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <span className="truncate font-medium">{d.name}</span>
+                <Badge variant="secondary" className="ml-auto">
+                  {docTypeLabel(d.doc_type)}
+                </Badge>
               </Link>
             ))}
           </div>

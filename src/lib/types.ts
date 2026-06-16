@@ -14,6 +14,9 @@ export type TaskPriority = "low" | "normal" | "high";
 export type ActivityType = "task" | "call" | "meeting" | "follow_up" | "note";
 export type CommChannel = "email" | "sms" | "whatsapp" | "call" | "chat" | "other";
 export type CommDirection = "inbound" | "outbound";
+export type TicketStatus = "open" | "pending" | "resolved" | "closed";
+export type TicketPriority = "low" | "normal" | "high" | "urgent";
+export type DocType = "contract" | "invoice" | "quotation" | "proposal" | "other";
 export type LeadSource =
   | "web"
   | "referral"
@@ -244,6 +247,73 @@ export interface EmailTemplate {
   updated_at: string;
 }
 
+export interface Ticket {
+  id: string;
+  org_id: string;
+  subject: string;
+  description: string | null;
+  status: TicketStatus;
+  priority: TicketPriority;
+  contact_id: string | null;
+  account_id: string | null;
+  assignee_id: string | null;
+  sla_due_at: string | null;
+  resolved_at: string | null;
+  min_level: number;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TicketComment {
+  id: string;
+  ticket_id: string;
+  body: string;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface KbArticle {
+  id: string;
+  org_id: string;
+  title: string;
+  body: string;
+  tags: string[];
+  published: boolean;
+  min_level: number;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Document {
+  id: string;
+  org_id: string;
+  name: string;
+  doc_type: DocType;
+  contact_id: string | null;
+  account_id: string | null;
+  deal_id: string | null;
+  ticket_id: string | null;
+  notes: string | null;
+  min_level: number;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DocumentVersion {
+  id: string;
+  document_id: string;
+  version: number;
+  storage_path: string;
+  file_name: string;
+  mime_type: string | null;
+  size_bytes: number | null;
+  created_by: string | null;
+  created_at: string;
+}
+
 export interface DealItem {
   id: string;
   deal_id: string;
@@ -341,6 +411,31 @@ export interface Database {
         Row: EmailTemplate;
         Insert: Insert<EmailTemplate, "org_id" | "name">;
         Update: Update<EmailTemplate>;
+      };
+      tickets: {
+        Row: Ticket;
+        Insert: Insert<Ticket, "org_id" | "subject">;
+        Update: Update<Ticket>;
+      };
+      ticket_comments: {
+        Row: TicketComment;
+        Insert: Insert<TicketComment, "ticket_id" | "body">;
+        Update: Update<TicketComment>;
+      };
+      kb_articles: {
+        Row: KbArticle;
+        Insert: Insert<KbArticle, "org_id" | "title">;
+        Update: Update<KbArticle>;
+      };
+      documents: {
+        Row: Document;
+        Insert: Insert<Document, "org_id" | "name">;
+        Update: Update<Document>;
+      };
+      document_versions: {
+        Row: DocumentVersion;
+        Insert: Insert<DocumentVersion, "document_id" | "storage_path" | "file_name">;
+        Update: Update<DocumentVersion>;
       };
     };
     Views: Record<string, never>;

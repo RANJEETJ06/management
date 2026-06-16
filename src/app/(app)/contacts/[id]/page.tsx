@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate, relativeDate } from "@/lib/utils";
-import { sensitivityTag } from "@/lib/levels";
+import { FEATURE_FLOORS, sensitivityTag } from "@/lib/levels";
 import {
   Phone,
   Mail,
@@ -22,8 +22,11 @@ import {
   Globe,
   Link2,
   MessagesSquare,
+  FolderOpen,
+  FileText,
 } from "lucide-react";
 import { channelLabel } from "@/lib/activities";
+import { docTypeLabel } from "@/lib/tickets";
 import { Contact, Communication, Deal, Interaction, Task } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -47,9 +50,10 @@ type TimelineEntry = {
 };
 
 export default async function ContactDetailPage({ params }: { params: { id: string } }) {
-  const { orgId, role } = await requireOrg();
+  const { orgId, role, level } = await requireOrg();
   const canEdit = role !== "member";
   const isMember = role === "member";
+  const canDocs = level >= FEATURE_FLOORS.documents;
   const supabase = createClient();
 
   const { data: contact } = await supabase
@@ -73,6 +77,15 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
 
   const socialEntries = Object.entries(contact.social ?? {}).filter(([, v]) => v);
   const customEntries = Object.entries(contact.custom_fields ?? {});
+
+  const { data: docs } = canDocs
+    ? await supabase
+        .from("documents")
+        .select("id, name, doc_type")
+        .eq("contact_id", params.id)
+        .order("created_at", { ascending: false })
+        .limit(20)
+    : { data: null };
 
   const [{ data: interactions }, dealsRes, { data: tasks }, { data: comms }] =
     await Promise.all([
@@ -293,6 +306,40 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
           )}
         </CardContent>
       </Card>
+
+      {canDocs && (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-lg font-semibold">
+              <FolderOpen className="h-4 w-4" /> Documents
+            </h2>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/documents?contact=${contact.id}`}>
+                <Plus className="h-4 w-4" /> Add
+              </Link>
+            </Button>
+          </div>
+          {(docs?.length ?? 0) === 0 ? (
+            <p className="text-sm text-muted-foreground">No documents linked to this contact.</p>
+          ) : (
+            <div className="space-y-1.5">
+              {docs!.map((d: any) => (
+                <Link
+                  key={d.id}
+                  href="/documents"
+                  className="flex items-center gap-2 rounded-md border bg-card p-2.5 text-sm transition-colors hover:bg-accent/40"
+                >
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span className="truncate font-medium">{d.name}</span>
+                  <Badge variant="secondary" className="ml-auto">
+                    {docTypeLabel(d.doc_type)}
+                  </Badge>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Activity</h2>
