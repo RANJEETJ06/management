@@ -35,7 +35,7 @@ export default async function InteractionDetailPage({ params }: { params: { id: 
     <div className="space-y-6">
       <PageHeader
         title={`Interaction · ${formatDate(r.occurred_on)}`}
-        description={relativeDate(r.occurred_on)}
+        description={relativeDate(r.created_at)}
         action={
           canEdit ? (
             <Button asChild variant="outline">
