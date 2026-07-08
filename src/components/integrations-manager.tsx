@@ -59,7 +59,7 @@ export function IntegrationsManager({
     <div className="space-y-3">
       <div className="rounded-md border border-gold/30 bg-gold-soft/50 px-4 py-3 text-sm text-[hsl(34_72%_30%)] dark:text-gold">
         Connection scaffolding. Credentials are saved for your workspace; wiring each
-        provider's live API call is the remaining step.
+        provider&rsquo;s live API call is the remaining step.
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
 

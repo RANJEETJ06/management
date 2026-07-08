@@ -17,10 +17,23 @@ const sans = Hanken_Grotesk({
   variable: "--font-sans",
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
 export const metadata: Metadata = {
-  title: "Lupin — a calmer CRM",
+  ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),
+  title: {
+    default: "Lupin — a calmer CRM",
+    template: "%s · Lupin",
+  },
   description:
     "Lupin is a relationship almanac for real businesses — contacts, conversations, deals, tasks, and tiered access from the field to the boardroom.",
+  openGraph: {
+    title: "Lupin — a calmer CRM",
+    description:
+      "Contacts, conversations, deals and tasks — with five-tier clearance so the right eyes see the right data.",
+    siteName: "Lupin",
+    type: "website",
+  },
 };
 
 export const viewport: Viewport = {
